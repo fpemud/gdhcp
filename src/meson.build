@@ -2,9 +2,9 @@ gdhcp_header_subdir = join_paths(package_subdir, 'gdhcp-' + apiversion)
 gdhcp_header_dir = join_paths(get_option('includedir'), gdhcp_header_subdir)
 
 version_data = configuration_data()
-version_data.set('MAJOR_VERSION', jsonrpc_glib_version_major)
-version_data.set('MINOR_VERSION', jsonrpc_glib_version_minor)
-version_data.set('MICRO_VERSION', jsonrpc_glib_version_micro)
+version_data.set('MAJOR_VERSION', gdhcp_version_major)
+version_data.set('MINOR_VERSION', gdhcp_version_minor)
+version_data.set('MICRO_VERSION', gdhcp_version_micro)
 version_data.set('VERSION', meson.project_version())
 
 jsonrpc_version_h = configure_file(

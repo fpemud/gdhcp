@@ -73,13 +73,13 @@ if get_option('default_library') != 'static'
   if host_machine.system() == 'windows'
     config_h.set('DLL_EXPORT', true)
     if cc.get_id() == 'msvc'
-      config_h.set('_JSONRPC_EXTERN', '__declspec(dllexport) extern')
+      config_h.set('_GDHCP_EXTERN', '__declspec(dllexport) extern')
     elif cc.has_argument('-fvisibility=hidden')
-      config_h.set('_JSONRPC_EXTERN', '__attribute__((visibility("default"))) __declspec(dllexport) extern')
+      config_h.set('_GDHCP_EXTERN', '__attribute__((visibility("default"))) __declspec(dllexport) extern')
       hidden_visibility_args = ['-fvisibility=hidden']
     endif
   elif cc.has_argument('-fvisibility=hidden')
-    config_h.set('_JSONRPC_EXTERN', '__attribute__((visibility("default"))) extern')
+    config_h.set('_GDHCP_EXTERN', '__attribute__((visibility("default"))) extern')
     hidden_visibility_args = ['-fvisibility=hidden']
   endif
 endif
