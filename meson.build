@@ -1,3 +1,9 @@
+# -*- meson -*-
+
+
+#
+# General operations
+#
 project('gdhcp', 'c',
         version: '1.35',
         license: 'GPL2+',
@@ -5,22 +11,28 @@ project('gdhcp', 'c',
         default_options: [ 'warning_level=1', 'buildtype=debugoptimized', 'c_std=gnu11' ],
 )
 
-version_arr = meson.project_version().split('.')
-gdhcp_version_major = version_arr[0].to_int()
-gdhcp_version_minor = version_arr[1].to_int()
+gdhcp_version_major = meson.project_version().split('.')[0].to_int()
+gdhcp_version_minor = meson.project_version().split('.')[1].to_int()
 
 libversion = '@0@.@1@'.format(gdhcp_version_major, gdhcp_version_minor)
 
 config_h = configuration_data()
 
+
+#
+# Add compiler parameters
+#
 add_project_arguments([
   '-DHAVE_CONFIG_H',
   '-I' + meson.build_root(),
 ], language: 'c')
 
+
+#
+# Add advanced compiler parameters
+#
 cc = meson.get_compiler('c')
 
-global_c_args = []
 test_c_args = [
   '-Wcast-align',
   '-Wdeclaration-after-statement',
@@ -59,52 +71,54 @@ if get_option('enable_profiling')
   test_c_args += '-pg'
 endif
 
+global_c_args = []
 foreach arg: test_c_args
   if cc.has_multi_arguments(arg)
     global_c_args += arg
   endif
 endforeach
-
 add_project_arguments(global_c_args, language: 'c')
 
+
+#
 # Detect and set symbol visibility
+#
 hidden_visibility_args = []
 if get_option('default_library') != 'static'
-  if host_machine.system() == 'windows'
-    config_h.set('DLL_EXPORT', true)
-    if cc.get_id() == 'msvc'
-      config_h.set('_GDHCP_EXTERN', '__declspec(dllexport) extern')
-    elif cc.has_argument('-fvisibility=hidden')
-      config_h.set('_GDHCP_EXTERN', '__attribute__((visibility("default"))) __declspec(dllexport) extern')
-      hidden_visibility_args = ['-fvisibility=hidden']
-    endif
-  elif cc.has_argument('-fvisibility=hidden')
+  if cc.has_argument('-fvisibility=hidden')
     config_h.set('_GDHCP_EXTERN', '__attribute__((visibility("default"))) extern')
     hidden_visibility_args = ['-fvisibility=hidden']
   endif
 endif
 
+
+#
+# Generate config.h
+#
 configure_file(
          output: 'config.h',
   configuration: config_h,
 )
 
-# Setup various paths that subdirectory meson.build files need
-package_subdir = get_option('package_subdir')
-girdir = join_paths(get_option('datadir'), package_subdir, 'gir-1.0')
-typelibdir = join_paths(get_option('libdir'), package_subdir, 'girepository-1.0')
-libdir = join_paths(get_option('libdir'), package_subdir)
-if package_subdir != ''
-  vapidir = join_paths(get_option('datadir'), package_subdir, 'vapi')
-else
-  vapidir = join_paths(get_option('datadir'), 'vala', 'vapi')
-endif
 
+#
+# Setup various variables that subdirectory meson.build files need
+#
+girdir = join_paths(get_option('datadir'), 'gir-1.0')
+typelibdir = join_paths(get_option('libdir'), 'girepository-1.0')
+libdir = get_option('libdir')
+vapidir = join_paths(get_option('datadir'), 'vala', 'vapi')
 gnome = import('gnome')
+# libversion is needed by subdirectory meson.build files
+# gdhcp_version_major and gdhcp_version_minor are needed by subdirectory meson.build files
+# hidden_visibility_args is needed by subdirectory meson.build files
 
+
+#
+# call subdirectory meson.build files
+#
 subdir('src')
 subdir('tests')
-
 if get_option('enable_gtk_doc')
   subdir('doc')
 endif

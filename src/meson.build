@@ -1,4 +1,4 @@
-gdhcp_header_subdir = join_paths(package_subdir, 'gdhcp-' + apiversion)
+gdhcp_header_subdir = 'gdhcp-' + apiversion
 gdhcp_header_dir = join_paths(get_option('includedir'), gdhcp_header_subdir)
 
 version_data = configuration_data()
