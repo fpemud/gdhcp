@@ -1,39 +1,21 @@
 project('gdhcp', 'c',
         version: '1.35',
-        license: 'GPLv2',
-        meson_version: '>= 0.40.1',
+        license: 'GPL2+',
+        meson_version: '>=0.40.1',
         default_options: [ 'warning_level=1', 'buildtype=debugoptimized', 'c_std=gnu11' ],
 )
 
 version_arr = meson.project_version().split('.')
-jsonrpc_glib_version_major = version_arr[0].to_int()
-jsonrpc_glib_version_minor = version_arr[1].to_int()
-jsonrpc_glib_version_micro = version_arr[2].to_int()
+gdhcp_version_major = version_arr[0].to_int()
+gdhcp_version_minor = version_arr[1].to_int()
 
-apiversion = '1.0'
-soversion = 1
-
-if jsonrpc_glib_version_minor.is_odd()
-  jsonrpc_glib_interface_age = 0
-else
-  jsonrpc_glib_interface_age = jsonrpc_glib_version_micro
-endif
-
-# maintaining compatibility with the previous libtool versioning
-# current = minor * 100 + micro - interface
-# revision = interface
-current = jsonrpc_glib_version_minor * 100 + jsonrpc_glib_version_micro - jsonrpc_glib_interface_age
-revision = jsonrpc_glib_interface_age
-libversion = '@0@.@1@.@2@'.format(soversion, current, revision)
+libversion = '@0@.@1@'.format(gdhcp_version_major, gdhcp_version_minor)
 
 config_h = configuration_data()
-config_h.set_quoted('GETTEXT_PACKAGE', 'libjsonrpc_glib')
-config_h.set_quoted('LOCALEDIR', join_paths(get_option('prefix'), get_option('localedir')))
 
 add_project_arguments([
   '-DHAVE_CONFIG_H',
   '-I' + meson.build_root(),
-  '-DJSONRPC_GLIB_COMPILATION',
 ], language: 'c')
 
 cc = meson.get_compiler('c')
