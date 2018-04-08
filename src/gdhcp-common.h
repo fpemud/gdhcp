@@ -19,10 +19,17 @@
  *
  */
 
+#ifndef __GDHCP_COMMON_H_
+#define __GDHCP_COMMON_H_
+
 #include <netinet/udp.h>
 #include <netinet/ip.h>
 
 #include <glib.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define CLIENT_PORT 68
 #define SERVER_PORT 67
@@ -160,11 +167,12 @@ typedef struct dhcp_option {
 
 /* Length of the option types in binary form */
 static const uint8_t dhcp_option_lengths[] = {
-	[OPTION_IP]	= 4,
-	[OPTION_STRING]	= 1,
-	[OPTION_U8]	= 1,
-	[OPTION_U16]	= 2,
-	[OPTION_U32]	= 4,
+	0,  /* OPTION_UNKNOWN */
+	4,  /* OPTION_IP */
+	1,  /* OPTION_STRING */
+	1,  /* OPTION_U8 */
+	2,  /* OPTION_U16 */
+	4,  /* OPTION_U32 */
 };
 
 /* already defined within netinet/in.h if using GNU compiler */
@@ -215,3 +223,8 @@ int dhcp_l3_socket_send(int index, int port, int family);
 
 char *get_interface_name(int index);
 bool interface_is_up(int index);
+
+#ifdef __cplusplus
+}
+#endif
+#endif	    /* !__GDHCP_COMMON_H_ */

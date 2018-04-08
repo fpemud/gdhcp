@@ -19,8 +19,15 @@
  *
  */
 
+#ifndef __GDHCP_UNALIGNED_H_
+#define __GDHCP_UNALIGNED_H_
+
 #include <endian.h>
 #include <byteswap.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #define get_unaligned(ptr)			\
 ({						\
@@ -38,126 +45,20 @@ do {						\
 	__p->__v = (val);			\
 } while(0)
 
-#if __BYTE_ORDER == __LITTLE_ENDIAN
-static inline uint64_t get_le64(const void *ptr)
-{
-	return get_unaligned((const uint64_t *) ptr);
-}
+uint64_t get_le64(const void *ptr);
+uint64_t get_be64(const void *ptr);
+uint32_t get_le32(const void *ptr);
+uint32_t get_be32(const void *ptr);
+uint16_t get_le16(const void *ptr);
+uint16_t get_be16(const void *ptr);
+void put_be16(uint16_t val, void *ptr);
+void put_be32(uint32_t val, void *ptr);
+void put_le16(uint16_t val, void *ptr);
+void put_le32(uint32_t val, void *ptr);
+void put_be64(uint64_t val, void *ptr);
+void put_le64(uint64_t val, void *ptr);
 
-static inline uint64_t get_be64(const void *ptr)
-{
-	return bswap_64(get_unaligned((const uint64_t *) ptr));
+#ifdef __cplusplus
 }
-
-static inline uint32_t get_le32(const void *ptr)
-{
-	return get_unaligned((const uint32_t *) ptr);
-}
-
-static inline uint32_t get_be32(const void *ptr)
-{
-	return bswap_32(get_unaligned((const uint32_t *) ptr));
-}
-
-static inline uint16_t get_le16(const void *ptr)
-{
-	return get_unaligned((const uint16_t *) ptr);
-}
-
-static inline uint16_t get_be16(const void *ptr)
-{
-	return bswap_16(get_unaligned((const uint16_t *) ptr));
-}
-
-static inline void put_be16(uint16_t val, void *ptr)
-{
-	put_unaligned(bswap_16(val), (uint16_t *) ptr);
-}
-
-static inline void put_be32(uint32_t val, void *ptr)
-{
-	put_unaligned(bswap_32(val), (uint32_t *) ptr);
-}
-
-static inline void put_le16(uint16_t val, void *ptr)
-{
-	put_unaligned(val, (uint16_t *) ptr);
-}
-
-static inline void put_le32(uint32_t val, void *ptr)
-{
-	put_unaligned(val, (uint32_t *) ptr);
-}
-
-static inline void put_be64(uint64_t val, void *ptr)
-{
-	put_unaligned(bswap_64(val), (uint64_t *) ptr);
-}
-
-static inline void put_le64(uint64_t val, void *ptr)
-{
-	put_unaligned(val, (uint64_t *) ptr);
-}
-#elif __BYTE_ORDER == __BIG_ENDIAN
-static inline uint64_t get_le64(const void *ptr)
-{
-	return bswap_64(get_unaligned((const uint64_t *) ptr));
-}
-
-static inline uint64_t get_be64(const void *ptr)
-{
-	return get_unaligned((const uint64_t *) ptr);
-}
-
-static inline uint32_t get_le32(const void *ptr)
-{
-	return bswap_32(get_unaligned((const uint32_t *) ptr));
-}
-
-static inline uint32_t get_be32(const void *ptr)
-{
-	return get_unaligned((const uint32_t *) ptr);
-}
-
-static inline uint16_t get_le16(const void *ptr)
-{
-	return bswap_16(get_unaligned((const uint16_t *) ptr));
-}
-
-static inline uint16_t get_be16(const void *ptr)
-{
-	return get_unaligned((const uint16_t *) ptr);
-}
-
-static inline void put_be16(uint16_t val, void *ptr)
-{
-	put_unaligned(val, (uint16_t *) ptr);
-}
-
-static inline void put_be32(uint32_t val, void *ptr)
-{
-	put_unaligned(val, (uint32_t *) ptr);
-}
-
-static inline void put_le16(uint16_t val, void *ptr)
-{
-	put_unaligned(bswap_16(val), (uint16_t *) ptr);
-}
-
-static inline void put_le32(uint32_t val, void *ptr)
-{
-	put_unaligned(bswap_32(val), (uint32_t *) ptr);
-}
-
-static inline void put_be64(uint64_t val, void *ptr)
-{
-	put_unaligned(val, (uint64_t *) ptr);
-}
-
-static inline void put_le64(uint64_t val, void *ptr)
-{
-	put_unaligned(bswap_64(val), (uint64_t *) ptr);
-}
-#else
-#error "Unknown byte order"
 #endif
+#endif	    /* !__GDHCP_UNALIGNED_H_ */

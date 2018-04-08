@@ -41,9 +41,7 @@
 #include "gdhcp-common.h"
 #include "gdhcp-ipv4ll.h"
 
-/**
- * Return a random link local IP (in host byte order)
- */
+/* Return a random link local IP (in host byte order) */
 uint32_t ipv4ll_random_ip(void)
 {
 	unsigned tmp;
@@ -57,9 +55,7 @@ uint32_t ipv4ll_random_ip(void)
 	return ((LINKLOCAL_ADDR + 0x0100) + tmp);
 }
 
-/**
- * Return a random delay in range of zero to secs*1000
- */
+/* Return a random delay in range of zero to secs*1000 */
 guint ipv4ll_random_delay_ms(guint secs)
 {
 	uint64_t rand;

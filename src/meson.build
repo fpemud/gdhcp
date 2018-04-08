@@ -38,6 +38,7 @@ gdhcp_public_headers = [
 gdhcp_public_sources = [
   'gdhcp-common.c',
   'gdhcp-ipv4ll.c',
+  'gdhcp-unaligned.c',
   'gdhcp-client.c',
   'gdhcp-server.c',
 ]
@@ -70,8 +71,8 @@ if get_option('with_introspection')
                 sources: gdhcp_sources,
               nsversion: apiversion,
               namespace: 'gdhcp',
-          symbol_prefix: 'gdhcp',
-      identifier_prefix: 'gdhcp',
+          symbol_prefix: 'g_dhcp',
+      identifier_prefix: 'GDHCP',
               link_with: gdhcp,
                includes: [ 'GLib-2.0' ],
                 install: true,
