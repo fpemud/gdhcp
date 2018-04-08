@@ -14,6 +14,8 @@ project('gdhcp', 'c',
 gdhcp_version_major = meson.project_version().split('.')[0].to_int()
 gdhcp_version_minor = meson.project_version().split('.')[1].to_int()
 
+apiversion = '@0@.0'.format(gdhcp_version_major)
+soversion = gdhcp_version_major
 libversion = '@0@.@1@'.format(gdhcp_version_major, gdhcp_version_minor)
 
 config_h = configuration_data()
@@ -23,7 +25,7 @@ config_h = configuration_data()
 # Add compiler parameters
 #
 add_project_arguments([
-  '-DHAVE_CONFIG_H',
+  '-DGDHCP_COMPILATION',
   '-I' + meson.build_root(),
 ], language: 'c')
 
@@ -45,8 +47,8 @@ test_c_args = [
   '-Wno-unused-parameter',
   '-Wpointer-arith',
   '-Wredundant-decls',
-  '-Wswitch-default',
-  '-Wswitch-enum',
+#  '-Wswitch-default',
+#  '-Wswitch-enum',
   '-Wuninitialized',
   ['-Werror=format-security', '-Werror=format=2' ],
   '-Werror=empty-body',

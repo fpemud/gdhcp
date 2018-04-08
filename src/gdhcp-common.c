@@ -18,9 +18,7 @@
  *
  */
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#include "config.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -38,7 +36,8 @@
 #include <fcntl.h>
 
 #include "gdhcp.h"
-#include "common.h"
+#include "gdhcp-common.h"
+#include "gdhcp-unaligned.h"
 
 static const DHCPOption client_options[] = {
 	{ OPTION_IP,			0x01 }, /* subnet-mask */

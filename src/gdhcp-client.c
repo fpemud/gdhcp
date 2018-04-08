@@ -19,9 +19,7 @@
  *
  */
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#include "config.h"
 
 #define _GNU_SOURCE
 #include <stdio.h>
@@ -44,8 +42,9 @@
 #include <glib.h>
 
 #include "gdhcp.h"
-#include "common.h"
-#include "ipv4ll.h"
+#include "gdhcp-common.h"
+#include "gdhcp-unaligned.h"
+#include "gdhcp-ipv4ll.h"
 
 #define DISCOVER_TIMEOUT 5
 #define DISCOVER_RETRIES 6

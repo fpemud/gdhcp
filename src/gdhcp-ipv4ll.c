@@ -18,6 +18,9 @@
  *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  *
  */
+
+#include "config.h"
+
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
@@ -33,8 +36,10 @@
 #include <arpa/inet.h>
 
 #include <glib.h>
-#include "ipv4ll.h"
-#include "common.h"
+
+#include "gdhcp.h"
+#include "gdhcp-common.h"
+#include "gdhcp-ipv4ll.h"
 
 /**
  * Return a random link local IP (in host byte order)

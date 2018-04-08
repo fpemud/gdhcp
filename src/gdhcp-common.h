@@ -24,9 +24,6 @@
 
 #include <glib.h>
 
-#include "unaligned.h"
-#include "gdhcp.h"
-
 #define CLIENT_PORT 68
 #define SERVER_PORT 67
 

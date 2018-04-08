@@ -28,6 +28,10 @@
 
 #include <glib.h>
 
+#define GDHCP_INSIDE
+# include "gdhcp-version.h"
+#undef GDHCP_INSIDE
+
 #ifdef __cplusplus
 extern "C" {
 #endif

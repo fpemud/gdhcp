@@ -1,6 +1,6 @@
 # -*- meson -*-
 
-gdhcp_header_subdir = 'gdhcp-' + gdhcp_version_major
+gdhcp_header_subdir = 'gdhcp-@0@'.format(gdhcp_version_major)
 gdhcp_header_dir = join_paths(get_option('includedir'), gdhcp_header_subdir)
 
 
@@ -30,7 +30,6 @@ gdhcp_generated_headers = [
 
 gdhcp_public_headers = [
   'gdhcp.h',
-  'gdhcp-client.h',
   'gdhcp-common.h',
   'gdhcp-ipv4ll.h',
   'gdhcp-unaligned.h',
@@ -49,9 +48,14 @@ gdhcp_sources = [
   gdhcp_public_sources,
 ]
 
-gdhcp = library('gdhcp-' + gdhcp_version_major, gdhcp_sources,
+gdhcp_deps = [
+  dependency('gio-2.0'),
+]
+
+gdhcp = library('gdhcp-' + apiversion, gdhcp_sources,
             c_args: hidden_visibility_args,
-         soversion: gdhcp_version_major,
+      dependencies: gdhcp_deps,
+         soversion: soversion,
            version: libversion,
            install: true,
 )
@@ -64,11 +68,12 @@ if get_option('with_introspection')
 
   gir = gnome.generate_gir(gdhcp,
                 sources: gdhcp_sources,
-              nsversion: gdhcp_version_major,
+              nsversion: apiversion,
               namespace: 'gdhcp',
           symbol_prefix: 'gdhcp',
       identifier_prefix: 'gdhcp',
               link_with: gdhcp,
+               includes: [ 'GLib-2.0' ],
                 install: true,
         install_dir_gir: girdir,
     install_dir_typelib: typelibdir,
@@ -76,8 +81,9 @@ if get_option('with_introspection')
   )
 
   if get_option('with_vapi')
-    gnome.generate_vapi('gdhcp-' + gdhcp_version_major,
+    gnome.generate_vapi('gdhcp-' + apiversion,
                 sources: gir[0],
+               packages: [ 'glib-2.0' ],
                 install: true,
             install_dir: vapidir,
     )
@@ -100,7 +106,8 @@ pkgg.generate(
       subdirs: gdhcp_header_subdir,
       version: meson.project_version(),
          name: 'gdhcp',
-     filebase: 'gdhcp-@0@'.format(gdhcp_version_major),
+     filebase: 'gdhcp-@0@'.format(apiversion),
   description: 'DHCP client library with GLib integration',
+     requires: [ 'glib-2.0' ],
 )
 

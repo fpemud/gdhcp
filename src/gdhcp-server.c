@@ -19,9 +19,7 @@
  *
  */
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#include "config.h"
 
 #include <stdio.h>
 #include <errno.h>
@@ -40,7 +38,9 @@
 
 #include <glib.h>
 
-#include "common.h"
+#include "gdhcp.h"
+#include "gdhcp-common.h"
+#include "gdhcp-unaligned.h"
 
 /* 8 hours */
 #define DEFAULT_DHCP_LEASE_SEC (8*60*60)
