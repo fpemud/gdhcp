@@ -47,8 +47,6 @@ test_c_args = [
   '-Wno-unused-parameter',
   '-Wpointer-arith',
   '-Wredundant-decls',
-#  '-Wswitch-default',
-#  '-Wswitch-enum',
   '-Wuninitialized',
   ['-Werror=format-security', '-Werror=format=2' ],
   '-Werror=empty-body',
