@@ -5,10 +5,10 @@
 # General operations
 #
 project('gdhcp', 'c',
-        version: '1.35',
-        license: 'GPL2+',
-        meson_version: '>=0.40.1',
-        default_options: [ 'warning_level=1', 'buildtype=debugoptimized', 'c_std=gnu11' ],
+          version: '1.35',
+          license: 'GPL2+',
+    meson_version: '>=0.40.1',
+  default_options: [ 'warning_level=1', 'buildtype=debugoptimized', 'c_std=gnu11' ]
 )
 
 gdhcp_version_major = meson.project_version().split('.')[0].to_int()
@@ -97,8 +97,7 @@ endif
 #
 configure_file(
          output: 'config.h',
-  configuration: config_h,
-)
+  configuration: config_h)
 
 
 #
@@ -118,7 +117,7 @@ gnome = import('gnome')
 # call subdirectory meson.build files
 #
 subdir('src')
-subdir('tests')
+#subdir('tests')
 if get_option('enable_gtk_doc')
   subdir('doc')
 endif

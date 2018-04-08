@@ -1,3 +1,5 @@
+# -*- meson -*-
+
 if get_option('enable_tests')
 
 test_env = [

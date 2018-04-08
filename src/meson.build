@@ -1,45 +1,46 @@
-gdhcp_header_subdir = 'gdhcp-' + apiversion
+# -*- meson -*-
+
+gdhcp_header_subdir = 'gdhcp-' + gdhcp_version_major
 gdhcp_header_dir = join_paths(get_option('includedir'), gdhcp_header_subdir)
 
+
+#
+# Generate gdhcp-version.h
+#
 version_data = configuration_data()
 version_data.set('MAJOR_VERSION', gdhcp_version_major)
 version_data.set('MINOR_VERSION', gdhcp_version_minor)
-version_data.set('MICRO_VERSION', gdhcp_version_micro)
 version_data.set('VERSION', meson.project_version())
 
-jsonrpc_version_h = configure_file(
-          input: 'jsonrpc-version.h.in',
-         output: 'jsonrpc-version.h',
-    install_dir: gdhcp_header_dir,
-        install: true,
-  configuration: version_data)
+gdhcp_version_h = configure_file(
+                         input: 'gdhcp-version.h.in',
+                        output: 'gdhcp-version.h',
+                   install_dir: gdhcp_header_dir,
+                       install: true,
+                 configuration: version_data
+)
 
+
+#
+# Generate library file
+#
 gdhcp_generated_headers = [
-  jsonrpc_version_h,
+  gdhcp_version_h,
 ]
 
 gdhcp_public_headers = [
-  'jsonrpc-client.h',
-  'jsonrpc-glib.h',
-  'jsonrpc-input-stream-private.h',
-  'jsonrpc-input-stream.h',
-  'jsonrpc-message.h',
-  'jsonrpc-output-stream.h',
-  'jsonrpc-server.h',
-  'jsonrpc-version-macros.h',
+  'gdhcp.h',
+  'gdhcp-client.h',
+  'gdhcp-common.h',
+  'gdhcp-ipv4ll.h',
+  'gdhcp-unaligned.h',
 ]
 
 gdhcp_public_sources = [
-  'jsonrpc-client.c',
-  'jsonrpc-input-stream.c',
-  'jsonrpc-message.c',
-  'jsonrpc-output-stream.c',
-  'jsonrpc-server.c',
-]
-
-gdhcp_deps = [
-  dependency('gio-2.0'),
-  dependency('json-glib-1.0'),
+  'gdhcp-common.c',
+  'gdhcp-ipv4ll.c',
+  'gdhcp-client.c',
+  'gdhcp-server.c',
 ]
 
 gdhcp_sources = [
@@ -48,64 +49,58 @@ gdhcp_sources = [
   gdhcp_public_sources,
 ]
 
-gdhcp = library(
-  'jsonrpc-glib-' + apiversion,
-  gdhcp_sources,
-
-        c_args: hidden_visibility_args,
-  dependencies: gdhcp_deps,
-     soversion: soversion,
-       version: libversion,
-       install: true,
+gdhcp = library('gdhcp-' + gdhcp_version_major, gdhcp_sources,
+            c_args: hidden_visibility_args,
+         soversion: gdhcp_version_major,
+           version: libversion,
+           install: true,
 )
 
-gdhcp_dep = declare_dependency(
-              sources: gdhcp_generated_headers,
-         dependencies: gdhcp_deps,
-            link_with: gdhcp,
-  include_directories: include_directories('.'),
-)
 
+#
+# Generate introspection files
+#
 if get_option('with_introspection')
 
-  gdhcp_gir = gnome.generate_gir(gdhcp,
-                sources: gdhcp_generated_headers + gdhcp_public_headers + gdhcp_public_sources,
-              nsversion: apiversion,
-              namespace: 'Jsonrpc',
-          symbol_prefix: 'jsonrpc',
-      identifier_prefix: 'Jsonrpc',
+  gir = gnome.generate_gir(gdhcp,
+                sources: gdhcp_sources,
+              nsversion: gdhcp_version_major,
+              namespace: 'gdhcp',
+          symbol_prefix: 'gdhcp',
+      identifier_prefix: 'gdhcp',
               link_with: gdhcp,
-               includes: [ 'Gio-2.0', 'Json-1.0' ],
                 install: true,
         install_dir_gir: girdir,
     install_dir_typelib: typelibdir,
-             extra_args: [ '--c-include=jsonrpc-glib.h' ],
+             extra_args: [ '--c-include=gdhcp.h' ],
   )
 
   if get_option('with_vapi')
-
-    gdhcp_vapi = gnome.generate_vapi('jsonrpc-glib-' + apiversion,
-          sources: gdhcp_gir[0],
-         packages: [ 'gio-2.0', 'json-glib-1.0' ],
-          install: true,
-      install_dir: vapidir,
+    gnome.generate_vapi('gdhcp-' + gdhcp_version_major,
+                sources: gir[0],
+                install: true,
+            install_dir: vapidir,
     )
-
   endif
 endif
 
+
+#
+# Install header files
+#
 install_headers(gdhcp_public_headers, subdir: gdhcp_header_subdir)
 
-pkgg = import('pkgconfig')
 
+#
+# Generate pkgconfig files
+#
+pkgg = import('pkgconfig')
 pkgg.generate(
     libraries: [gdhcp],
       subdirs: gdhcp_header_subdir,
       version: meson.project_version(),
-         name: 'Jsonrpc-GLib',
-     filebase: 'jsonrpc-glib-@0@'.format(apiversion),
-  description: 'A jsonrpc library for GLib',
-     requires: [ 'gio-2.0', 'json-glib-1.0' ],
-  install_dir: join_paths(libdir, 'pkgconfig'),
+         name: 'gdhcp',
+     filebase: 'gdhcp-@0@'.format(gdhcp_version_major),
+  description: 'DHCP client library with GLib integration',
 )
 
