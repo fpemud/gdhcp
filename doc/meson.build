@@ -12,13 +12,12 @@ json_prefix = dependency('json-glib-1.0').get_pkgconfig_variable('prefix')
 json_docpath = join_paths(json_prefix, 'share', 'gtk-doc', 'html')
 docpath = join_paths(get_option('datadir'), 'gtk-doc', 'html')
 
-gnome.gtkdoc('jsonrpc-glib',
-           main_xml: 'jsonrpc-glib-docs.sgml',
+gnome.gtkdoc('gdhcp',
+           main_xml: 'gdhcp-docs.sgml',
             src_dir: [
               join_paths(meson.source_root(), 'src'),
               join_paths(meson.build_root(), 'src'),
             ],
-
        dependencies: libjsonrpc_glib_dep,
   gobject_typesfile: 'jsonrpc-glib.types',
           scan_args: [
