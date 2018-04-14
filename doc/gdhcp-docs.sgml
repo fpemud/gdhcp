@@ -51,7 +51,7 @@
   </bookinfo>
 
   <chapter>
-    <title>Jsonrpc-GLib API Reference</title>
+    <title>GDHCP API Reference</title>
     <xi:include href="xml/jsonrpc-client.xml"/>
     <xi:include href="xml/jsonrpc-server.xml"/>
     <xi:include href="xml/jsonrpc-message.xml"/>
