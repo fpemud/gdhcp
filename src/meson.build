@@ -22,7 +22,7 @@ gdhcp_version_h = configure_file(
 
 
 #
-# Generate library file
+# Generate library file and pkgconfig file
 #
 gdhcp_generated_headers = [
   gdhcp_version_h,
@@ -59,6 +59,13 @@ gdhcp = library('gdhcp-' + apiversion, gdhcp_sources,
          soversion: soversion,
            version: libversion,
            install: true,
+)
+
+gdhcp_dep = declare_dependency(
+              sources: gdhcp_generated_headers,
+         dependencies: gdhcp_deps,
+            link_with: gdhcp,
+  include_directories: include_directories('.'),
 )
 
 
