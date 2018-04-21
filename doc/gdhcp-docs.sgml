@@ -13,7 +13,7 @@
       <para>This document is the API reference for for &package_name; &package_version;.</para>
       <para>
         The latest version of this API reference is also available
-        <ulink role="online-location" url="https://developer.gnome.org/jsonrpc/">online</ulink>.
+        <ulink role="online-location" url="https://github.com/fpemud/gdhcp/">online</ulink>.
       </para>
       <para>
         If you find any issues in this API reference, please report it
@@ -24,7 +24,7 @@
 
     <copyright>
       <year>2016-2017</year>
-      <holder>Christian Hergert</holder>
+      <holder>Fpemud</holder>
     </copyright>
 
     <legalnotice>
@@ -52,11 +52,7 @@
 
   <chapter>
     <title>GDHCP API Reference</title>
-    <xi:include href="xml/jsonrpc-client.xml"/>
-    <xi:include href="xml/jsonrpc-server.xml"/>
-    <xi:include href="xml/jsonrpc-message.xml"/>
-    <xi:include href="xml/jsonrpc-input-stream.xml"/>
-    <xi:include href="xml/jsonrpc-output-stream.xml"/>
+    <xi:include href="xml/gdhcp.xml"/>
   </chapter>
 
   <chapter id="object-tree">
