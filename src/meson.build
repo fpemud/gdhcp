@@ -115,7 +115,7 @@ pkgg.generate(
       version: meson.project_version(),
          name: 'gdhcp',
      filebase: 'gdhcp-@0@'.format(apiversion),
-  description: 'DHCP client library with GLib integration',
+  description: 'DHCP library with GLib integration',
      requires: [ 'glib-2.0' ],
 )
 

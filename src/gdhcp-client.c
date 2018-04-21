@@ -1,6 +1,6 @@
 /*
  *
- *  DHCP client library with GLib integration
+ *  DHCP library with GLib integration
  *
  *  Copyright (C) 2009-2014  Intel Corporation. All rights reserved.
  *

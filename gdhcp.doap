@@ -7,8 +7,8 @@
 
   <name>gdhcp</name>
   <shortname>gdhcp</shortname>
-  <shortdesc>DHCP client library with GLib integration</shortdesc>
-  <description>DHCP client library with GLib integration.</description>
+  <shortdesc>DHCP library with GLib integration</shortdesc>
+  <description>DHCP library with GLib integration.</description>
   <homepage rdf:resource="https://github.com/fpemud/gdhcp" />
   <download-page rdf:resource="https://github.com/fpemud/gdhcp" />
 
