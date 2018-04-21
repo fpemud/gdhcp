@@ -1,6 +1,6 @@
 # -*- meson -*-
 
-gdhcp_header_subdir = 'gdhcp-@0@'.format(gdhcp_version_major)
+gdhcp_header_subdir = 'gdhcp-@0@.0'.format(gdhcp_version_major)
 gdhcp_header_dir = join_paths(get_option('includedir'), gdhcp_header_subdir)
 
 
