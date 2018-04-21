@@ -1,5 +1,5 @@
 /* build with:
- *   gcc `pkg-config --cflags --libs gdhcp-1.0` dhcp-test.c
+ *   gcc `pkg-config --cflags --libs gdhcp-1.0` dhcp-test.c -o dhcp-test
  */
 
 #include <stdio.h>
