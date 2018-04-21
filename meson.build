@@ -84,12 +84,12 @@ add_project_arguments(global_c_args, language: 'c')
 # Detect and set symbol visibility
 #
 hidden_visibility_args = []
-if get_option('default_library') != 'static'
-  if cc.has_argument('-fvisibility=hidden')
-    config_h.set('_GDHCP_EXTERN', '__attribute__((visibility("default"))) extern')
-    hidden_visibility_args = ['-fvisibility=hidden']
-  endif
-endif
+#if get_option('default_library') != 'static'
+#  if cc.has_argument('-fvisibility=hidden')
+#    config_h.set('_GDHCP_EXTERN', '__attribute__((visibility("default"))) extern')
+#    hidden_visibility_args = ['-fvisibility=hidden']
+#  endif
+#endif
 
 
 #
