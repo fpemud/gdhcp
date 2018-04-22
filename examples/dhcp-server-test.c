@@ -18,30 +18,30 @@ static void sig_term(int sig)
 static void handle_error(GDHCPServerError error)
 {
 	switch (error) {
-	case G_DHCP_SERVER_ERROR_NONE:
-		printf("dhcp server ok\n");
-		break;
-	case G_DHCP_SERVER_ERROR_INTERFACE_UNAVAILABLE:
-		printf("Interface unavailable\n");
-		break;
-	case G_DHCP_SERVER_ERROR_INTERFACE_IN_USE:
-		printf("Interface in use\n");
-		break;
-	case G_DHCP_SERVER_ERROR_INTERFACE_DOWN:
-		printf("Interface down\n");
-		break;
-	case G_DHCP_SERVER_ERROR_NOMEM:
-		printf("No memory\n");
-		break;
-	case G_DHCP_SERVER_ERROR_INVALID_INDEX:
-		printf("Invalid index\n");
-		break;
-	case G_DHCP_SERVER_ERROR_INVALID_OPTION:
-		printf("Invalid option\n");
-		break;
-	case G_DHCP_SERVER_ERROR_IP_ADDRESS_INVALID:
-		printf("Invalid address\n");
-		break;
+		case G_DHCP_SERVER_ERROR_NONE:
+			printf("dhcp server ok\n");
+			break;
+		case G_DHCP_SERVER_ERROR_INTERFACE_UNAVAILABLE:
+			printf("Interface unavailable\n");
+			break;
+		case G_DHCP_SERVER_ERROR_INTERFACE_IN_USE:
+			printf("Interface in use\n");
+			break;
+		case G_DHCP_SERVER_ERROR_INTERFACE_DOWN:
+			printf("Interface down\n");
+			break;
+		case G_DHCP_SERVER_ERROR_NOMEM:
+			printf("No memory\n");
+			break;
+		case G_DHCP_SERVER_ERROR_INVALID_INDEX:
+			printf("Invalid index\n");
+			break;
+		case G_DHCP_SERVER_ERROR_INVALID_OPTION:
+			printf("Invalid option\n");
+			break;
+		case G_DHCP_SERVER_ERROR_IP_ADDRESS_INVALID:
+			printf("Invalid address\n");
+			break;
 	}
 }
 
@@ -79,8 +79,7 @@ int main(int argc, char *argv[])
 	g_dhcp_server_set_option(dhcp_server, G_DHCP_SUBNET, "255.255.0.0");
 	g_dhcp_server_set_option(dhcp_server, G_DHCP_ROUTER, "192.168.0.2");
 	g_dhcp_server_set_option(dhcp_server, G_DHCP_DNS_SERVER, "192.168.0.3");
-	g_dhcp_server_set_ip_range(dhcp_server, "192.168.0.101",
-							"192.168.0.102");
+	g_dhcp_server_set_ip_range(dhcp_server, "192.168.0.101", "192.168.0.102");
 	main_loop = g_main_loop_new(NULL, FALSE);
 
 	printf("Start DHCP Server operation\n");
