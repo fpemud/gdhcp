@@ -22,7 +22,7 @@ gnome.gtkdoc('gdhcp',
   gobject_typesfile: 'gdhcp.types',
           scan_args: [
             '--rebuild-types',
-            '--ignore-decorators=_GDHCP_EXTERN',
+            '--ignore-decorators=GDHCP_EXTERN',
             '--ignore-headers=' + ' '.join(private_headers),
           ],
        fixxref_args: [
