@@ -37,27 +37,27 @@ static void print_elapsed(void)
 static void handle_error(GDHCPClientError error)
 {
 	switch (error) {
-	case G_DHCP_CLIENT_ERROR_NONE:
-		printf("dhcp client ok\n");
-		break;
-	case G_DHCP_CLIENT_ERROR_INTERFACE_UNAVAILABLE:
-		printf("Interface unavailable\n");
-		break;
-	case G_DHCP_CLIENT_ERROR_INTERFACE_IN_USE:
-		printf("Interface in use\n");
-		break;
-	case G_DHCP_CLIENT_ERROR_INTERFACE_DOWN:
-		printf("Interface down\n");
-		break;
-	case G_DHCP_CLIENT_ERROR_NOMEM:
-		printf("No memory\n");
-		break;
-	case G_DHCP_CLIENT_ERROR_INVALID_INDEX:
-		printf("Invalid index\n");
-		break;
-	case G_DHCP_CLIENT_ERROR_INVALID_OPTION:
-		printf("Invalid option\n");
-		break;
+		case G_DHCP_CLIENT_ERROR_NONE:
+			printf("dhcp client ok\n");
+			break;
+		case G_DHCP_CLIENT_ERROR_INTERFACE_UNAVAILABLE:
+			printf("Interface unavailable\n");
+			break;
+		case G_DHCP_CLIENT_ERROR_INTERFACE_IN_USE:
+			printf("Interface in use\n");
+			break;
+		case G_DHCP_CLIENT_ERROR_INTERFACE_DOWN:
+			printf("Interface down\n");
+			break;
+		case G_DHCP_CLIENT_ERROR_NOMEM:
+			printf("No memory\n");
+			break;
+		case G_DHCP_CLIENT_ERROR_INVALID_INDEX:
+			printf("Invalid index\n");
+			break;
+		case G_DHCP_CLIENT_ERROR_INVALID_OPTION:
+			printf("Invalid option\n");
+			break;
 	}
 }
 
