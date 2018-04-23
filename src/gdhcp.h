@@ -35,7 +35,7 @@
 G_BEGIN_DECLS
 
 #ifndef GDHCP_EXTERN
-#define GDHCP_EXTERN extern
+#define GDHCP_EXTERN
 #endif
 
 /* DHCP Client part*/
@@ -136,113 +136,110 @@ typedef void (*GDHCPClientEventFunc) (GDHCPClient *client, gpointer user_data);
 typedef void (*GDHCPDebugFunc)(const char *str, gpointer user_data);
 
 GDHCP_EXTERN
-GDHCPClient *g_dhcp_client_new(GDHCPType type, int index, GDHCPClientError *error);
+GDHCPClient *gdhcp_client_new(GDHCPType type, int index, GDHCPClientError *error);
 
 GDHCP_EXTERN
-int g_dhcp_client_start(GDHCPClient *client, const char *last_address);
+int gdhcp_client_start(GDHCPClient *client, const char *last_address);
 
 GDHCP_EXTERN
-void g_dhcp_client_stop(GDHCPClient *client);
+void gdhcp_client_stop(GDHCPClient *client);
 
 GDHCP_EXTERN
-GDHCPClient *g_dhcp_client_ref(GDHCPClient *client);
+GDHCPClient *gdhcp_client_ref(GDHCPClient *client);
 
 GDHCP_EXTERN
-void g_dhcp_client_unref(GDHCPClient *client);
+void gdhcp_client_unref(GDHCPClient *client);
 
 GDHCP_EXTERN
-void g_dhcp_client_register_event(GDHCPClient *client,
-					GDHCPClientEvent event,
-					GDHCPClientEventFunc func,
-					gpointer user_data);
+void gdhcp_client_register_event(GDHCPClient *client, GDHCPClientEvent event, GDHCPClientEventFunc func, gpointer user_data);
 
 GDHCP_EXTERN
-GDHCPClientError g_dhcp_client_set_request(GDHCPClient *client, unsigned int option_code);
+GDHCPClientError gdhcp_client_set_request(GDHCPClient *client, unsigned int option_code);
 
 GDHCP_EXTERN
-void g_dhcp_client_clear_requests(GDHCPClient *dhcp_client);
+void gdhcp_client_clear_requests(GDHCPClient *dhcp_client);
 
 GDHCP_EXTERN
-void g_dhcp_client_clear_values(GDHCPClient *dhcp_client);
+void gdhcp_client_clear_values(GDHCPClient *dhcp_client);
 
 GDHCP_EXTERN
-GDHCPClientError g_dhcp_client_set_id(GDHCPClient *client);
+GDHCPClientError gdhcp_client_set_id(GDHCPClient *client);
 
 GDHCP_EXTERN
-GDHCPClientError g_dhcp_client_set_send(GDHCPClient *client, unsigned char option_code, const char *option_value);
+GDHCPClientError gdhcp_client_set_send(GDHCPClient *client, unsigned char option_code, const char *option_value);
 
 GDHCP_EXTERN
-char *g_dhcp_client_get_server_address(GDHCPClient *client);
+char *gdhcp_client_get_server_address(GDHCPClient *client);
 
 GDHCP_EXTERN
-char *g_dhcp_client_get_address(GDHCPClient *client);
+char *gdhcp_client_get_address(GDHCPClient *client);
 
 GDHCP_EXTERN
-char *g_dhcp_client_get_netmask(GDHCPClient *client);
+char *gdhcp_client_get_netmask(GDHCPClient *client);
 
 GDHCP_EXTERN
-GList *g_dhcp_client_get_option(GDHCPClient *client, unsigned char option_code);
+GList *gdhcp_client_get_option(GDHCPClient *client, unsigned char option_code);
 
 GDHCP_EXTERN
-int g_dhcp_client_get_index(GDHCPClient *client);
+int gdhcp_client_get_index(GDHCPClient *client);
 
 GDHCP_EXTERN
-void g_dhcp_client_set_debug(GDHCPClient *client, GDHCPDebugFunc func, gpointer user_data);
+void gdhcp_client_set_debug(GDHCPClient *client, GDHCPDebugFunc func, gpointer user_data);
 
 GDHCP_EXTERN
-int g_dhcpv6_create_duid(GDHCPDuidType duid_type, int index, int type, unsigned char **duid, int *duid_len);
+int gdhcp_create_duid_v6(GDHCPDuidType duid_type, int index, int type, unsigned char **duid, int *duid_len);
 
 GDHCP_EXTERN
-int g_dhcpv6_client_set_duid(GDHCPClient *dhcp_client, unsigned char *duid, int duid_len);
+int gdhcp_client_set_duid_v6(GDHCPClient *dhcp_client, unsigned char *duid, int duid_len);
 
 GDHCP_EXTERN
-int g_dhcpv6_client_set_pd(GDHCPClient *dhcp_client, uint32_t *T1, uint32_t *T2, GSList *prefixes);
+int gdhcp_client_set_pd_v6(GDHCPClient *dhcp_client, uint32_t *T1, uint32_t *T2, GSList *prefixes);
 
 GDHCP_EXTERN
-GSList *g_dhcpv6_copy_prefixes(GSList *prefixes);
+GSList *gdhcp_copy_prefixes_v6(GSList *prefixes);
 
 GDHCP_EXTERN
-gboolean g_dhcpv6_client_clear_send(GDHCPClient *dhcp_client, uint16_t code);
+gboolean gdhcp_client_clear_send_v6(GDHCPClient *dhcp_client, uint16_t code);
 
 GDHCP_EXTERN
-void g_dhcpv6_client_set_send(GDHCPClient *dhcp_client, uint16_t option_code, uint8_t *option_value, uint16_t option_len);
+void gdhcp_client_set_send_v6(GDHCPClient *dhcp_client, uint16_t option_code, uint8_t *option_value, uint16_t option_len);
 
 GDHCP_EXTERN
-uint16_t g_dhcpv6_client_get_status(GDHCPClient *dhcp_client);
+uint16_t gdhcp_client_get_status_v6(GDHCPClient *dhcp_client);
 
 GDHCP_EXTERN
-int g_dhcpv6_client_set_oro(GDHCPClient *dhcp_client, int args, ...);
+int gdhcp_client_set_oro_v6(GDHCPClient *dhcp_client, int args, ...);
 
 GDHCP_EXTERN
-void g_dhcpv6_client_create_iaid(GDHCPClient *dhcp_client, int index, unsigned char *iaid);
+void gdhcp_client_create_iaid_v6(GDHCPClient *dhcp_client, int index, unsigned char *iaid);
 
 GDHCP_EXTERN
-int g_dhcpv6_client_get_timeouts(GDHCPClient *dhcp_client, uint32_t *T1, uint32_t *T2, time_t *started, time_t *expire);
+int gdhcp_client_get_timeouts_v6(GDHCPClient *dhcp_client, uint32_t *T1, uint32_t *T2, time_t *started, time_t *expire);
 
 GDHCP_EXTERN
-uint32_t g_dhcpv6_client_get_iaid(GDHCPClient *dhcp_client);
+uint32_t gdhcp_client_get_iaid_v6(GDHCPClient *dhcp_client);
 
 GDHCP_EXTERN
-void g_dhcpv6_client_set_iaid(GDHCPClient *dhcp_client, uint32_t iaid);
+void gdhcp_client_set_iaid_v6(GDHCPClient *dhcp_client, uint32_t iaid);
 
 GDHCP_EXTERN
-int g_dhcpv6_client_set_ia(GDHCPClient *dhcp_client, int index,
+int gdhcp_client_set_ia_v6(GDHCPClient *dhcp_client, int index,
 			int code, uint32_t *T1, uint32_t *T2,
 			bool add_addresses, const char *address);
 
 GDHCP_EXTERN
-int g_dhcpv6_client_set_ias(GDHCPClient *dhcp_client, int index,
+int gdhcp_client_set_ias_v6(GDHCPClient *dhcp_client, int index,
 			int code, uint32_t *T1, uint32_t *T2,
 			GSList *addresses);
 
 GDHCP_EXTERN
-void g_dhcpv6_client_reset_request(GDHCPClient *dhcp_client);
+void gdhcp_client_reset_request_v6(GDHCPClient *dhcp_client);
 
 GDHCP_EXTERN
-void g_dhcpv6_client_set_retransmit(GDHCPClient *dhcp_client);
+void gdhcp_client_set_retransmit_v6(GDHCPClient *dhcp_client);
 
 GDHCP_EXTERN
-void g_dhcpv6_client_clear_retransmit(GDHCPClient *dhcp_client);
+void gdhcp_client_clear_retransmit_v6(GDHCPClient *dhcp_client);
 
 /* DHCP Server */
 typedef enum {
@@ -266,37 +263,37 @@ struct _GDHCPServer;
 typedef struct _GDHCPServer GDHCPServer;
 
 GDHCP_EXTERN
-GDHCPServer *g_dhcp_server_new(GDHCPType type, int ifindex, GDHCPServerError *error);
+GDHCPServer *gdhcp_server_new(GDHCPType type, int ifindex, GDHCPServerError *error);
 
 GDHCP_EXTERN
-int g_dhcp_server_start(GDHCPServer *server);
+int gdhcp_server_start(GDHCPServer *server);
 
 GDHCP_EXTERN
-void g_dhcp_server_stop(GDHCPServer *server);
+void gdhcp_server_stop(GDHCPServer *server);
 
 GDHCP_EXTERN
-GDHCPServer *g_dhcp_server_ref(GDHCPServer *server);
+GDHCPServer *gdhcp_server_ref(GDHCPServer *server);
 
 GDHCP_EXTERN
-void g_dhcp_server_unref(GDHCPServer *server);
+void gdhcp_server_unref(GDHCPServer *server);
 
 GDHCP_EXTERN
-int g_dhcp_server_set_option(GDHCPServer *server, unsigned char option_code, const char *option_value);
+int gdhcp_server_set_option(GDHCPServer *server, unsigned char option_code, const char *option_value);
 
 GDHCP_EXTERN
-int g_dhcp_server_set_ip_range(GDHCPServer *server, const char *start_ip, const char *end_ip);
+int gdhcp_server_set_ip_range(GDHCPServer *server, const char *start_ip, const char *end_ip);
 
 GDHCP_EXTERN
-void g_dhcp_server_set_debug(GDHCPServer *server, GDHCPDebugFunc func, gpointer user_data);
+void gdhcp_server_set_debug(GDHCPServer *server, GDHCPDebugFunc func, gpointer user_data);
 
 GDHCP_EXTERN
-void g_dhcp_server_set_lease_time(GDHCPServer *dhcp_server, unsigned int lease_time);
+void gdhcp_server_set_lease_time(GDHCPServer *dhcp_server, unsigned int lease_time);
 
 GDHCP_EXTERN
-void g_dhcp_server_set_save_lease(GDHCPServer *dhcp_server, GDHCPSaveLeaseFunc func, gpointer user_data);
+void gdhcp_server_set_save_lease(GDHCPServer *dhcp_server, GDHCPSaveLeaseFunc func, gpointer user_data);
 
 GDHCP_EXTERN
-void g_dhcp_server_set_lease_added_cb(GDHCPServer *dhcp_server, GDHCPLeaseAddedCb cb);
+void gdhcp_server_set_lease_added_cb(GDHCPServer *dhcp_server, GDHCPLeaseAddedCb cb);
 
 int dhcp_get_random(uint64_t *val);
 void dhcp_cleanup_random(void);
