@@ -636,7 +636,7 @@ done:
 	close(sk);
 }
 
-void g_dhcpv6_client_set_retransmit(GDHCPClient *dhcp_client)
+void g_dhcp_v6_client_set_retransmit(GDHCPClient *dhcp_client)
 {
 	if (!dhcp_client)
 		return;
@@ -644,7 +644,7 @@ void g_dhcpv6_client_set_retransmit(GDHCPClient *dhcp_client)
 	dhcp_client->retransmit = true;
 }
 
-void g_dhcpv6_client_clear_retransmit(GDHCPClient *dhcp_client)
+void g_dhcp_v6_client_clear_retransmit(GDHCPClient *dhcp_client)
 {
 	if (!dhcp_client)
 		return;
@@ -652,7 +652,7 @@ void g_dhcpv6_client_clear_retransmit(GDHCPClient *dhcp_client)
 	dhcp_client->retransmit = false;
 }
 
-int g_dhcpv6_create_duid(GDHCPDuidType duid_type, int index, int type,
+int g_dhcp_v6_create_duid(GDHCPDuidType duid_type, int index, int type,
 			unsigned char **duid, int *duid_len)
 {
 	time_t duid_time;
@@ -705,7 +705,7 @@ static gchar *convert_to_hex(unsigned char *buf, int len)
 	return ret;
 }
 
-int g_dhcpv6_client_set_duid(GDHCPClient *dhcp_client, unsigned char *duid,
+int g_dhcp_v6_client_set_duid(GDHCPClient *dhcp_client, unsigned char *duid,
 			int duid_len)
 {
 	if (!dhcp_client || dhcp_client->type != G_DHCP_IPV6)
@@ -725,7 +725,7 @@ int g_dhcpv6_client_set_duid(GDHCPClient *dhcp_client, unsigned char *duid,
 	return 0;
 }
 
-int g_dhcpv6_client_set_pd(GDHCPClient *dhcp_client, uint32_t *T1,
+int g_dhcp_v6_client_set_pd(GDHCPClient *dhcp_client, uint32_t *T1,
 			uint32_t *T2, GSList *prefixes)
 {
 	uint8_t options[1452];
@@ -783,13 +783,13 @@ int g_dhcpv6_client_set_pd(GDHCPClient *dhcp_client, uint32_t *T1,
 		}
 	}
 
-	g_dhcpv6_client_set_send(dhcp_client, G_DHCPV6_IA_PD,
+	g_dhcp_v6_client_set_send(dhcp_client, G_DHCPV6_IA_PD,
 				options, len);
 
 	return 0;
 }
 
-uint32_t g_dhcpv6_client_get_iaid(GDHCPClient *dhcp_client)
+uint32_t g_dhcp_v6_client_get_iaid(GDHCPClient *dhcp_client)
 {
 	if (!dhcp_client || dhcp_client->type != G_DHCP_IPV6)
 		return 0;
@@ -797,7 +797,7 @@ uint32_t g_dhcpv6_client_get_iaid(GDHCPClient *dhcp_client)
 	return dhcp_client->iaid;
 }
 
-void g_dhcpv6_client_set_iaid(GDHCPClient *dhcp_client, uint32_t iaid)
+void g_dhcp_v6_client_set_iaid(GDHCPClient *dhcp_client, uint32_t iaid)
 {
 	if (!dhcp_client || dhcp_client->type != G_DHCP_IPV6)
 		return;
@@ -805,7 +805,7 @@ void g_dhcpv6_client_set_iaid(GDHCPClient *dhcp_client, uint32_t iaid)
 	dhcp_client->iaid = iaid;
 }
 
-void g_dhcpv6_client_create_iaid(GDHCPClient *dhcp_client, int index,
+void g_dhcp_v6_client_create_iaid(GDHCPClient *dhcp_client, int index,
 				unsigned char *iaid)
 {
 	uint8_t buf[6];
@@ -817,7 +817,7 @@ void g_dhcpv6_client_create_iaid(GDHCPClient *dhcp_client, int index,
 			iaid[1] << 16 | iaid[2] << 8 | iaid[3];
 }
 
-int g_dhcpv6_client_get_timeouts(GDHCPClient *dhcp_client,
+int g_dhcp_v6_client_get_timeouts(GDHCPClient *dhcp_client,
 				uint32_t *T1, uint32_t *T2,
 				time_t *started,
 				time_t *expire)
@@ -878,9 +878,9 @@ static void put_iaid(GDHCPClient *dhcp_client, int index, uint8_t *buf)
 {
 	uint32_t iaid;
 
-	iaid = g_dhcpv6_client_get_iaid(dhcp_client);
+	iaid = g_dhcp_v6_client_get_iaid(dhcp_client);
 	if (iaid == 0) {
-		g_dhcpv6_client_create_iaid(dhcp_client, index, buf);
+		g_dhcp_v6_client_create_iaid(dhcp_client, index, buf);
 		return;
 	}
 
@@ -890,7 +890,7 @@ static void put_iaid(GDHCPClient *dhcp_client, int index, uint8_t *buf)
 	buf[3] = iaid;
 }
 
-int g_dhcpv6_client_set_ia(GDHCPClient *dhcp_client, int index,
+int g_dhcp_v6_client_set_ia(GDHCPClient *dhcp_client, int index,
 			int code, uint32_t *T1, uint32_t *T2,
 			bool add_iaaddr, const char *ia_na)
 {
@@ -900,7 +900,7 @@ int g_dhcpv6_client_set_ia(GDHCPClient *dhcp_client, int index,
 		put_iaid(dhcp_client, index, ia_options);
 
 		g_dhcp_client_set_request(dhcp_client, G_DHCPV6_IA_TA);
-		g_dhcpv6_client_set_send(dhcp_client, G_DHCPV6_IA_TA,
+		g_dhcp_v6_client_set_send(dhcp_client, G_DHCPV6_IA_TA,
 					ia_options, sizeof(ia_options));
 
 	} else if (code == G_DHCPV6_IA_NA) {
@@ -948,7 +948,7 @@ int g_dhcpv6_client_set_ia(GDHCPClient *dhcp_client, int index,
 			create_iaaddr(dhcp_client, &ia_options[12],
 					IAADDR_LEN);
 
-			g_dhcpv6_client_set_send(dhcp_client, G_DHCPV6_IA_NA,
+			g_dhcp_v6_client_set_send(dhcp_client, G_DHCPV6_IA_NA,
 					ia_options, sizeof(ia_options));
 		} else {
 			uint8_t ia_options[4+4+4];
@@ -958,7 +958,7 @@ int g_dhcpv6_client_set_ia(GDHCPClient *dhcp_client, int index,
 			memset(&ia_options[4], 0x00, 4); /* T1 (4 bytes) */
 			memset(&ia_options[8], 0x00, 4); /* T2 (4 bytes) */
 
-			g_dhcpv6_client_set_send(dhcp_client, G_DHCPV6_IA_NA,
+			g_dhcp_v6_client_set_send(dhcp_client, G_DHCPV6_IA_NA,
 					ia_options, sizeof(ia_options));
 		}
 
@@ -968,7 +968,7 @@ int g_dhcpv6_client_set_ia(GDHCPClient *dhcp_client, int index,
 	return 0;
 }
 
-int g_dhcpv6_client_set_ias(GDHCPClient *dhcp_client, int index,
+int g_dhcp_v6_client_set_ias(GDHCPClient *dhcp_client, int index,
 			int code, uint32_t *T1, uint32_t *T2,
 			GSList *addresses)
 {
@@ -1022,14 +1022,14 @@ int g_dhcpv6_client_set_ias(GDHCPClient *dhcp_client, int index,
 			memset(&ia_options[8], 0x00, 4);
 	}
 
-	g_dhcpv6_client_set_send(dhcp_client, code, ia_options, total_len);
+	g_dhcp_v6_client_set_send(dhcp_client, code, ia_options, total_len);
 
 	g_free(ia_options);
 
 	return 0;
 }
 
-int g_dhcpv6_client_set_oro(GDHCPClient *dhcp_client, int args, ...)
+int g_dhcp_v6_client_set_oro(GDHCPClient *dhcp_client, int args, ...)
 {
 	va_list va;
 	int i, j, len = sizeof(uint16_t) * args;
@@ -1047,7 +1047,7 @@ int g_dhcpv6_client_set_oro(GDHCPClient *dhcp_client, int args, ...)
 	}
 	va_end(va);
 
-	g_dhcpv6_client_set_send(dhcp_client, G_DHCPV6_ORO, values, len);
+	g_dhcp_v6_client_set_send(dhcp_client, G_DHCPV6_ORO, values, len);
 
 	g_free(values);
 
@@ -3157,13 +3157,13 @@ static uint8_t *alloc_dhcpv6_option(uint16_t code, uint8_t *option,
 	return storage;
 }
 
-gboolean g_dhcpv6_client_clear_send(GDHCPClient *dhcp_client, uint16_t code)
+gboolean g_dhcp_v6_client_clear_send(GDHCPClient *dhcp_client, uint16_t code)
 {
 	return g_hash_table_remove(dhcp_client->send_value_hash,
 				GINT_TO_POINTER((int)code));
 }
 
-void g_dhcpv6_client_set_send(GDHCPClient *dhcp_client,
+void g_dhcp_v6_client_set_send(GDHCPClient *dhcp_client,
 					uint16_t option_code,
 					uint8_t *option_value,
 					uint16_t option_len)
@@ -3183,7 +3183,7 @@ void g_dhcpv6_client_set_send(GDHCPClient *dhcp_client,
 	}
 }
 
-void g_dhcpv6_client_reset_request(GDHCPClient *dhcp_client)
+void g_dhcp_v6_client_reset_request(GDHCPClient *dhcp_client)
 {
 	if (!dhcp_client || dhcp_client->type != G_DHCP_IPV6)
 		return;
@@ -3191,7 +3191,7 @@ void g_dhcpv6_client_reset_request(GDHCPClient *dhcp_client)
 	dhcp_client->last_request = time(NULL);
 }
 
-uint16_t g_dhcpv6_client_get_status(GDHCPClient *dhcp_client)
+uint16_t g_dhcp_v6_client_get_status(GDHCPClient *dhcp_client)
 {
 	if (!dhcp_client || dhcp_client->type != G_DHCP_IPV6)
 		return 0;
@@ -3257,7 +3257,7 @@ static GDHCPIAPrefix *copy_prefix(gpointer data)
 	return copy;
 }
 
-GSList *g_dhcpv6_copy_prefixes(GSList *prefixes)
+GSList *g_dhcp_v6_copy_prefixes(GSList *prefixes)
 {
 	GSList *copy = NULL;
 	GSList *list;
