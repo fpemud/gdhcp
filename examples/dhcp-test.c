@@ -37,27 +37,27 @@ static void print_elapsed(void)
 static void handle_error(GDHCPClientError error)
 {
 	switch (error) {
-		case G_DHCP_CLIENT_ERROR_NONE:
-			printf("dhcp client ok\n");
-			break;
-		case G_DHCP_CLIENT_ERROR_INTERFACE_UNAVAILABLE:
-			printf("Interface unavailable\n");
-			break;
-		case G_DHCP_CLIENT_ERROR_INTERFACE_IN_USE:
-			printf("Interface in use\n");
-			break;
-		case G_DHCP_CLIENT_ERROR_INTERFACE_DOWN:
-			printf("Interface down\n");
-			break;
-		case G_DHCP_CLIENT_ERROR_NOMEM:
-			printf("No memory\n");
-			break;
-		case G_DHCP_CLIENT_ERROR_INVALID_INDEX:
-			printf("Invalid index\n");
-			break;
-		case G_DHCP_CLIENT_ERROR_INVALID_OPTION:
-			printf("Invalid option\n");
-			break;
+	case G_DHCP_CLIENT_ERROR_NONE:
+		printf("dhcp client ok\n");
+		break;
+	case G_DHCP_CLIENT_ERROR_INTERFACE_UNAVAILABLE:
+		printf("Interface unavailable\n");
+		break;
+	case G_DHCP_CLIENT_ERROR_INTERFACE_IN_USE:
+		printf("Interface in use\n");
+		break;
+	case G_DHCP_CLIENT_ERROR_INTERFACE_DOWN:
+		printf("Interface down\n");
+		break;
+	case G_DHCP_CLIENT_ERROR_NOMEM:
+		printf("No memory\n");
+		break;
+	case G_DHCP_CLIENT_ERROR_INVALID_INDEX:
+		printf("Invalid index\n");
+		break;
+	case G_DHCP_CLIENT_ERROR_INVALID_OPTION:
+		printf("Invalid option\n");
+		break;
 	}
 }
 
@@ -79,28 +79,28 @@ static void lease_available_cb(GDHCPClient *dhcp_client, gpointer user_data)
 
 	printf("Lease available\n");
 
-	address = gdhcp_client_get_address(dhcp_client);
+	address = g_dhcp_client_get_address(dhcp_client);
 	printf("address %s\n", address);
 	if (!address)
 		return;
 
-	option_value = gdhcp_client_get_option(dhcp_client, G_DHCP_SUBNET);
+	option_value = g_dhcp_client_get_option(dhcp_client, G_DHCP_SUBNET);
 	for (list = option_value; list; list = list->next)
 		printf("sub-mask %s\n", (char *) list->data);
 
-	option_value = gdhcp_client_get_option(dhcp_client, G_DHCP_DNS_SERVER);
+	option_value = g_dhcp_client_get_option(dhcp_client, G_DHCP_DNS_SERVER);
 	for (list = option_value; list; list = list->next)
 		printf("domain-name-servers %s\n", (char *) list->data);
 
-	option_value = gdhcp_client_get_option(dhcp_client, G_DHCP_DOMAIN_NAME);
+	option_value = g_dhcp_client_get_option(dhcp_client, G_DHCP_DOMAIN_NAME);
 	for (list = option_value; list; list = list->next)
 		printf("domain-name %s\n", (char *) list->data);
 
-	option_value = gdhcp_client_get_option(dhcp_client, G_DHCP_ROUTER);
+	option_value = g_dhcp_client_get_option(dhcp_client, G_DHCP_ROUTER);
 	for (list = option_value; list; list = list->next)
 		printf("routers %s\n", (char *) list->data);
 
-	option_value = gdhcp_client_get_option(dhcp_client, G_DHCP_HOST_NAME);
+	option_value = g_dhcp_client_get_option(dhcp_client, G_DHCP_HOST_NAME);
 	for (list = option_value; list; list = list->next)
 		printf("hostname %s\n", (char *) list->data);
 }
@@ -121,23 +121,27 @@ int main(int argc, char *argv[])
 
 	printf("Create DHCP client for interface %d\n", index);
 
-	dhcp_client = gdhcp_client_new(G_DHCP_IPV4, index, &error);
+	dhcp_client = g_dhcp_client_new(G_DHCP_IPV4, index, &error);
 	if (!dhcp_client) {
 		handle_error(error);
 		exit(0);
 	}
 
-	gdhcp_client_set_send(dhcp_client, G_DHCP_HOST_NAME, "<hostname>");
+	g_dhcp_client_set_send(dhcp_client, G_DHCP_HOST_NAME, "<hostname>");
 
-	gdhcp_client_set_request(dhcp_client, G_DHCP_HOST_NAME);
-	gdhcp_client_set_request(dhcp_client, G_DHCP_SUBNET);
-	gdhcp_client_set_request(dhcp_client, G_DHCP_DNS_SERVER);
-	gdhcp_client_set_request(dhcp_client, G_DHCP_DOMAIN_NAME);
-	gdhcp_client_set_request(dhcp_client, G_DHCP_NTP_SERVER);
-	gdhcp_client_set_request(dhcp_client, G_DHCP_ROUTER);
+	g_dhcp_client_set_request(dhcp_client, G_DHCP_HOST_NAME);
+	g_dhcp_client_set_request(dhcp_client, G_DHCP_SUBNET);
+	g_dhcp_client_set_request(dhcp_client, G_DHCP_DNS_SERVER);
+	g_dhcp_client_set_request(dhcp_client, G_DHCP_DOMAIN_NAME);
+	g_dhcp_client_set_request(dhcp_client, G_DHCP_NTP_SERVER);
+	g_dhcp_client_set_request(dhcp_client, G_DHCP_ROUTER);
 
-	gdhcp_client_register_event(dhcp_client, G_DHCP_CLIENT_EVENT_LEASE_AVAILABLE, lease_available_cb, NULL);
-	gdhcp_client_register_event(dhcp_client, G_DHCP_CLIENT_EVENT_NO_LEASE, no_lease_cb, NULL);
+	g_dhcp_client_register_event(dhcp_client,
+			G_DHCP_CLIENT_EVENT_LEASE_AVAILABLE,
+						lease_available_cb, NULL);
+
+	g_dhcp_client_register_event(dhcp_client,
+			G_DHCP_CLIENT_EVENT_NO_LEASE, no_lease_cb, NULL);
 
 	main_loop = g_main_loop_new(NULL, FALSE);
 
@@ -145,7 +149,7 @@ int main(int argc, char *argv[])
 
 	timer = g_timer_new();
 
-	gdhcp_client_start(dhcp_client, NULL);
+	g_dhcp_client_start(dhcp_client, NULL);
 
 	memset(&sa, 0, sizeof(sa));
 	sa.sa_handler = sig_term;
@@ -156,7 +160,7 @@ int main(int argc, char *argv[])
 
 	g_timer_destroy(timer);
 
-	gdhcp_client_unref(dhcp_client);
+	g_dhcp_client_unref(dhcp_client);
 
 	g_main_loop_unref(main_loop);
 

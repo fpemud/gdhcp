@@ -71,7 +71,7 @@ if get_option('with_introspection')
                 sources: gdhcp_sources,
               nsversion: apiversion,
               namespace: 'gdhcp',
-          symbol_prefix: 'gdhcp',
+          symbol_prefix: 'g_dhcp',
       identifier_prefix: 'GDHCP',
               link_with: gdhcp,
                includes: [ 'GLib-2.0' ],

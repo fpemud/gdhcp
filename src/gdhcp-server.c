@@ -347,7 +347,7 @@ done:
 	return ret;
 }
 
-GDHCPServer *gdhcp_server_new(GDHCPType type,
+GDHCPServer *g_dhcp_server_new(GDHCPType type,
 		int ifindex, GDHCPServerError *error)
 {
 	GDHCPServer *dhcp_server = NULL;
@@ -748,7 +748,7 @@ static gboolean listener_event(GIOChannel *channel, GIOCondition condition,
 }
 
 /* Caller need to load leases before call it */
-int gdhcp_server_start(GDHCPServer *dhcp_server)
+int g_dhcp_server_start(GDHCPServer *dhcp_server)
 {
 	GIOChannel *listener_channel;
 	int listener_sockfd;
@@ -783,7 +783,7 @@ int gdhcp_server_start(GDHCPServer *dhcp_server)
 	return 0;
 }
 
-int gdhcp_server_set_option(GDHCPServer *dhcp_server,
+int g_dhcp_server_set_option(GDHCPServer *dhcp_server,
 		unsigned char option_code, const char *option_value)
 {
 	struct in_addr nip;
@@ -810,7 +810,7 @@ int gdhcp_server_set_option(GDHCPServer *dhcp_server,
 	return 0;
 }
 
-void gdhcp_server_set_save_lease(GDHCPServer *dhcp_server,
+void g_dhcp_server_set_save_lease(GDHCPServer *dhcp_server,
 				GDHCPSaveLeaseFunc func, gpointer user_data)
 {
 	if (!dhcp_server)
@@ -819,7 +819,7 @@ void gdhcp_server_set_save_lease(GDHCPServer *dhcp_server,
 	dhcp_server->save_lease_func = func;
 }
 
-void gdhcp_server_set_lease_added_cb(GDHCPServer *dhcp_server,
+void g_dhcp_server_set_lease_added_cb(GDHCPServer *dhcp_server,
 							GDHCPLeaseAddedCb cb)
 {
 	if (!dhcp_server)
@@ -828,7 +828,7 @@ void gdhcp_server_set_lease_added_cb(GDHCPServer *dhcp_server,
 	dhcp_server->lease_added_cb = cb;
 }
 
-GDHCPServer *gdhcp_server_ref(GDHCPServer *dhcp_server)
+GDHCPServer *g_dhcp_server_ref(GDHCPServer *dhcp_server)
 {
 	if (!dhcp_server)
 		return NULL;
@@ -838,7 +838,7 @@ GDHCPServer *gdhcp_server_ref(GDHCPServer *dhcp_server)
 	return dhcp_server;
 }
 
-void gdhcp_server_stop(GDHCPServer *dhcp_server)
+void g_dhcp_server_stop(GDHCPServer *dhcp_server)
 {
 	/* Save leases, before stop; load them before start */
 	save_lease(dhcp_server);
@@ -853,7 +853,7 @@ void gdhcp_server_stop(GDHCPServer *dhcp_server)
 	dhcp_server->started = FALSE;
 }
 
-void gdhcp_server_unref(GDHCPServer *dhcp_server)
+void g_dhcp_server_unref(GDHCPServer *dhcp_server)
 {
 	if (!dhcp_server)
 		return;
@@ -861,7 +861,7 @@ void gdhcp_server_unref(GDHCPServer *dhcp_server)
 	if (__sync_fetch_and_sub(&dhcp_server->ref_count, 1) != 1)
 		return;
 
-	gdhcp_server_stop(dhcp_server);
+	g_dhcp_server_stop(dhcp_server);
 
 	g_hash_table_destroy(dhcp_server->option_hash);
 
@@ -872,7 +872,7 @@ void gdhcp_server_unref(GDHCPServer *dhcp_server)
 	g_free(dhcp_server);
 }
 
-int gdhcp_server_set_ip_range(GDHCPServer *dhcp_server,
+int g_dhcp_server_set_ip_range(GDHCPServer *dhcp_server,
 		const char *start_ip, const char *end_ip)
 {
 	struct in_addr _host_addr;
@@ -890,7 +890,7 @@ int gdhcp_server_set_ip_range(GDHCPServer *dhcp_server,
 	return 0;
 }
 
-void gdhcp_server_set_lease_time(GDHCPServer *dhcp_server,
+void g_dhcp_server_set_lease_time(GDHCPServer *dhcp_server,
 					unsigned int lease_time)
 {
 	if (!dhcp_server)
@@ -899,7 +899,7 @@ void gdhcp_server_set_lease_time(GDHCPServer *dhcp_server,
 	dhcp_server->lease_seconds = lease_time;
 }
 
-void gdhcp_server_set_debug(GDHCPServer *dhcp_server,
+void g_dhcp_server_set_debug(GDHCPServer *dhcp_server,
 				GDHCPDebugFunc func, gpointer user_data)
 {
 	if (!dhcp_server)
