@@ -39,9 +39,8 @@ G_BEGIN_DECLS
 #endif
 
 /* DHCP Client part*/
-struct _GDHCPClient;
-
-typedef struct _GDHCPClient GDHCPClient;
+#define GDHCP_TYPE_CLIENT  (gdhcp_client_get_type())
+#define GDHCP_CLIENT_ERROR (gdhcp_client_error_quark())
 
 typedef enum {
 	G_DHCP_CLIENT_ERROR_NONE,
@@ -52,6 +51,31 @@ typedef enum {
 	G_DHCP_CLIENT_ERROR_INVALID_INDEX,
 	G_DHCP_CLIENT_ERROR_INVALID_OPTION
 } GDHCPClientError;
+
+GDHCP_EXTERN
+G_DECLARE_DERIVABLE_TYPE (GDHCPClient, gdhcp_client, GDHCP, CLIENT, GObject)
+
+struct _GDHCPClientClass
+{
+  GObjectClass parent_class;
+
+  void     (*notification) (GDHCPClient *self,
+                            const gchar   *method_name,
+                            GVariant      *params);
+  gboolean (*handle_call)  (GDHCPClient *self,
+                            const gchar   *method,
+                            GVariant      *id,
+                            GVariant      *params);
+  void     (*failed)       (GDHCPClient *self);
+
+  gpointer _reserved2;
+  gpointer _reserved3;
+  gpointer _reserved4;
+  gpointer _reserved5;
+  gpointer _reserved6;
+  gpointer _reserved7;
+  gpointer _reserved8;
+};
 
 typedef enum {
 	G_DHCP_CLIENT_EVENT_LEASE_AVAILABLE,
@@ -134,6 +158,9 @@ typedef struct {
 typedef void (*GDHCPClientEventFunc) (GDHCPClient *client, gpointer user_data);
 
 typedef void (*GDHCPDebugFunc)(const char *str, gpointer user_data);
+
+GDHCP_EXTERN
+GQuark g_dhcp_client_error_quark(void);
 
 GDHCP_EXTERN
 GDHCPClient *g_dhcp_client_new(GDHCPType type, int index, GDHCPClientError *error);

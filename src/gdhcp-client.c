@@ -81,7 +81,7 @@ typedef enum _dhcp_client_state {
 	DECLINE,
 } ClientState;
 
-struct _GDHCPClient {
+typedef struct {
 	int ref_count;
 	GDHCPType type;
 	ClientState state;
@@ -155,7 +155,9 @@ struct _GDHCPClient {
 	bool retransmit;
 	struct timeval start_time;
 	bool request_bcast;
-};
+} GDHCPClientPrivate;
+
+G_DEFINE_TYPE_WITH_PRIVATE (GDHCPClient, g_dhcp_client, G_TYPE_OBJECT)
 
 static inline void debug(GDHCPClient *client, const char *format, ...)
 {
@@ -1150,6 +1152,15 @@ static void remove_option_value(gpointer data)
 	g_list_free(option_value);
 }
 
+/**
+ * g_dhcp_client_new:
+ * @type:
+ * @ifindex:
+ *
+ * Creates a new #GDHCPClient instance.
+ *
+ * Returns: (transfer full): A newly created #GDHCPClient
+ */
 GDHCPClient *g_dhcp_client_new(GDHCPType type,
 			int ifindex, GDHCPClientError *error)
 {
