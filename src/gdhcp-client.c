@@ -159,6 +159,34 @@ typedef struct {
 
 G_DEFINE_TYPE_WITH_PRIVATE (GDHCPClient, g_dhcp_client, G_TYPE_OBJECT)
 
+static void gdhcp_client_class_init (GDHCPClientClass *klass)
+{
+	GObjectClass *object_class = G_OBJECT_CLASS (klass);
+
+	object_class->constructed = gdhcp_client_constructed;
+	object_class->dispose = gdhcp_client_dispose;
+}
+
+static void gdhcp_client_constructed (GObject *object)
+{
+	GDHCPClient *self = (GDHCPClient *)object;
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private (self);
+
+	G_OBJECT_CLASS (gdhcp_client_parent_class)->constructed (object);
+
+	/* do work */
+}
+
+static void gdhcp_client_dispose (GObject *object)
+{
+	GDHCPClient *self = (GDHCPClient *)object;
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private (self);
+
+	/* do work */
+
+	G_OBJECT_CLASS (gdhcp_client_parent_class)->dispose (object);
+}
+
 static inline void debug(GDHCPClient *client, const char *format, ...)
 {
 	char str[256];
