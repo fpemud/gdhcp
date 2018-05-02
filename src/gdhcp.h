@@ -38,7 +38,8 @@ G_BEGIN_DECLS
 #define GDHCP_EXTERN
 #endif
 
-/* DHCP Client part*/
+/* DHCP client part */
+
 #define GDHCP_TYPE_CLIENT  (gdhcp_client_get_type())
 #define GDHCP_CLIENT_ERROR (gdhcp_client_error_quark())
 
@@ -52,7 +53,6 @@ typedef enum {
 	G_DHCP_CLIENT_ERROR_INVALID_OPTION
 } GDHCPClientError;
 
-GDHCP_EXTERN
 G_DECLARE_DERIVABLE_TYPE (GDHCPClient, gdhcp_client, GDHCP, CLIENT, GObject)
 
 struct _GDHCPClientClass
@@ -271,7 +271,10 @@ void g_dhcp_v6_client_set_retransmit(GDHCPClient *dhcp_client);
 GDHCP_EXTERN
 void g_dhcp_v6_client_clear_retransmit(GDHCPClient *dhcp_client);
 
-/* DHCP Server */
+
+
+/* DHCP server part */
+
 typedef enum {
 	G_DHCP_SERVER_ERROR_NONE,
 	G_DHCP_SERVER_ERROR_INTERFACE_UNAVAILABLE,
