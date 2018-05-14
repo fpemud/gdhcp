@@ -59,14 +59,21 @@ struct _GDHCPClientClass
 {
   GObjectClass parent_class;
 
-  void     (*notification) (GDHCPClient *self,
-                            const gchar   *method_name,
-                            GVariant      *params);
-  gboolean (*handle_call)  (GDHCPClient *self,
-                            const gchar   *method,
-                            GVariant      *id,
-                            GVariant      *params);
-  void     (*failed)       (GDHCPClient *self);
+  void (*lease_available)     (GDHCPClient *self, gpointer lease_available_data);
+  void (*ipv4ll_available)    (GDHCPClient *self, gpointer lease_available_data);
+  void (*no_lease)            (GDHCPClient *self, gpointer no_lease_data);
+  void (*lease_lost_cb)       (GDHCPClient *self, gpointer lease_lost_data);
+  void (*ipv4ll_lost_cb)      (GDHCPClient *self, gpointer ipv4ll_lost_data);
+  void (*address_conflict_cb) (GDHCPClient *self, gpointer address_conflict_data);
+  void (*information_req_cb)  (GDHCPClient *self, gpointer information_req_data);
+  void (*solicitation_cb)     (GDHCPClient *self, gpointer solicitation_data);
+  void (*advertise_cb)        (GDHCPClient *self, gpointer advertise_data);
+  void (*request_cb)          (GDHCPClient *self, gpointer request_data);
+  void (*renew_cb)            (GDHCPClient *self, gpointer renew_data);
+  void (*rebind_cb)           (GDHCPClient *self, gpointer rebind_data);
+  void (*release_cb)          (GDHCPClient *self, gpointer release_data);
+  void (*confirm_cb)          (GDHCPClient *self, gpointer confirm_data);
+  void (*decline_cb)          (GDHCPClient *self, gpointer decline_data);
 
   gpointer _reserved2;
   gpointer _reserved3;
