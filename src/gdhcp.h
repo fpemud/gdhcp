@@ -59,14 +59,21 @@ struct _GDHCPClientClass
 {
   GObjectClass parent_class;
 
-  void     (*notification) (GDHCPClient *self,
-                            const gchar   *method_name,
-                            GVariant      *params);
-  gboolean (*handle_call)  (GDHCPClient *self,
-                            const gchar   *method,
-                            GVariant      *id,
-                            GVariant      *params);
-  void     (*failed)       (GDHCPClient *self);
+  void (*lease_available)  (GDHCPClient *self, gpointer lease_available_data);
+  void (*ipv4ll_available) (GDHCPClient *self, gpointer lease_available_data);
+  void (*no_lease)         (GDHCPClient *self, gpointer no_lease_data);
+  void (*lease_lost)       (GDHCPClient *self, gpointer lease_lost_data);
+  void (*ipv4ll_lost)      (GDHCPClient *self, gpointer ipv4ll_lost_data);
+  void (*address_conflict) (GDHCPClient *self, gpointer address_conflict_data);
+  void (*information_req)  (GDHCPClient *self, gpointer information_req_data);
+  void (*solicitation)     (GDHCPClient *self, gpointer solicitation_data);
+  void (*advertise)        (GDHCPClient *self, gpointer advertise_data);
+  void (*request)          (GDHCPClient *self, gpointer request_data);
+  void (*renew)            (GDHCPClient *self, gpointer renew_data);
+  void (*rebind)           (GDHCPClient *self, gpointer rebind_data);
+  void (*release)          (GDHCPClient *self, gpointer release_data);
+  void (*confirm)          (GDHCPClient *self, gpointer confirm_data);
+  void (*decline)          (GDHCPClient *self, gpointer decline_data);
 
   gpointer _reserved2;
   gpointer _reserved3;
@@ -326,7 +333,7 @@ GDHCP_EXTERN
 void g_dhcp_server_set_save_lease(GDHCPServer *dhcp_server, GDHCPSaveLeaseFunc func, gpointer user_data);
 
 GDHCP_EXTERN
-void g_dhcp_server_set_lease_added_cb(GDHCPServer *dhcp_server, GDHCPLeaseAddedCb cb);
+void g_dhcp_server_set_lease_added(GDHCPServer *dhcp_server, GDHCPLeaseAddedCb cb);
 
 int dhcp_get_random(uint64_t *val);
 void dhcp_cleanup_random(void);
