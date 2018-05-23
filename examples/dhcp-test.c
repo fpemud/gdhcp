@@ -136,12 +136,15 @@ int main(int argc, char *argv[])
 	g_dhcp_client_set_request(dhcp_client, G_DHCP_NTP_SERVER);
 	g_dhcp_client_set_request(dhcp_client, G_DHCP_ROUTER);
 
-	g_dhcp_client_register_event(dhcp_client,
-			G_DHCP_CLIENT_EVENT_LEASE_AVAILABLE,
-						lease_available_cb, NULL);
+	g_signal_connect(dhcp_client,
+					 "lease_available",
+					 G_CALLBACK (lease_available_cb),
+					 NULL);
 
-	g_dhcp_client_register_event(dhcp_client,
-			G_DHCP_CLIENT_EVENT_NO_LEASE, no_lease_cb, NULL);
+	g_signal_connect(dhcp_client,
+					 "no_lease",
+					 G_CALLBACK (no_lease_cb),
+					 NULL);
 
 	main_loop = g_main_loop_new(NULL, FALSE);
 

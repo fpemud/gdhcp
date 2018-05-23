@@ -185,12 +185,6 @@ GDHCP_EXTERN
 void g_dhcp_client_unref(GDHCPClient *client);
 
 GDHCP_EXTERN
-void g_dhcp_client_register_event(GDHCPClient *client,
-					GDHCPClientEvent event,
-					GDHCPClientEventFunc func,
-					gpointer user_data);
-
-GDHCP_EXTERN
 GDHCPClientError g_dhcp_client_set_request(GDHCPClient *client, unsigned int option_code);
 
 GDHCP_EXTERN
