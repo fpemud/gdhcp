@@ -108,38 +108,6 @@ typedef struct {
 	GList *request_list;
 	GHashTable *code_value_hash;
 	GHashTable *send_value_hash;
-	GDHCPClientEventFunc lease_available_cb;
-	gpointer lease_available_data;
-	GDHCPClientEventFunc ipv4ll_available_cb;
-	gpointer ipv4ll_available_data;
-	GDHCPClientEventFunc no_lease_cb;
-	gpointer no_lease_data;
-	GDHCPClientEventFunc lease_lost_cb;
-	gpointer lease_lost_data;
-	GDHCPClientEventFunc ipv4ll_lost_cb;
-	gpointer ipv4ll_lost_data;
-	GDHCPClientEventFunc address_conflict_cb;
-	gpointer address_conflict_data;
-	GDHCPDebugFunc debug_func;
-	gpointer debug_data;
-	GDHCPClientEventFunc information_req_cb;
-	gpointer information_req_data;
-	GDHCPClientEventFunc solicitation_cb;
-	gpointer solicitation_data;
-	GDHCPClientEventFunc advertise_cb;
-	gpointer advertise_data;
-	GDHCPClientEventFunc request_cb;
-	gpointer request_data;
-	GDHCPClientEventFunc renew_cb;
-	gpointer renew_data;
-	GDHCPClientEventFunc rebind_cb;
-	gpointer rebind_data;
-	GDHCPClientEventFunc release_cb;
-	gpointer release_data;
-	GDHCPClientEventFunc confirm_cb;
-	gpointer confirm_data;
-	GDHCPClientEventFunc decline_cb;
-	gpointer decline_data;
 	char *last_address;
 	unsigned char *duid;
 	int duid_len;
@@ -158,6 +126,300 @@ typedef struct {
 } GDHCPClientPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (GDHCPClient, g_dhcp_client, G_TYPE_OBJECT)
+
+enum {
+	N_PROPS,
+};
+
+enum {
+	SIG_LEASE_AVAILABLE,
+	SIG_IPV4LL_AVAILABLE,
+	SIG_NO_LEASE,
+	SIG_LEASE_LOST,
+	SIG_IPV4LL_LOST,
+	SIG_ADDRESS_CONFLICT,
+	SIG_INFORMATION_REQ,
+	SIG_SOLICITATION,
+	SIG_ADVERTISE,
+	SIG_REQUEST,
+	SIG_RENEW,
+	SIG_REBIND,
+	SIG_RELEASE,
+	SIG_CONFIRM,
+	SIG_DECLINE,
+	N_SIGNALS,
+};
+
+static GParamSpec *properties[N_PROPS];
+static guint signals[N_SIGNALS];
+
+static void gdhcp_client_class_init (GDHCPClientClass *klass)
+{
+	GObjectClass *object_class = G_OBJECT_CLASS (klass);
+
+	object_class->constructed = gdhcp_client_constructed;
+	object_class->dispose = gdhcp_client_dispose;
+
+	/**
+	 * GDHCPClient::lease_available:
+	 *
+	 * The "lease_available" signal is called when FIXME.
+	 */
+	signals[SIG_LEASE_AVAILABLE] = g_signal_new ("lease_available",
+												 G_TYPE_FROM_CLASS (klass),
+												 G_SIGNAL_RUN_LAST,
+												 G_STRUCT_OFFSET (GDHCPClientClass, lease_available),
+												 NULL, NULL,
+												 g_cclosure_marshal_VOID__VOID,
+												 G_TYPE_NONE, 0);
+	g_signal_set_va_marshaller (signals[SIG_LEASE_AVAILABLE],
+								G_TYPE_FROM_CLASS (klass),
+								g_cclosure_marshal_VOID__VOIDv);
+
+	/**
+	 * GDHCPClient::ipv4ll_available:
+	 *
+	 * The "ipv4ll_available" signal is called when FIXME.
+	 */
+	signals[SIG_IPV4LL_AVAILABLE] = g_signal_new ("ipv4ll_available",
+												  G_TYPE_FROM_CLASS (klass),
+												  G_SIGNAL_RUN_LAST,
+												  G_STRUCT_OFFSET (GDHCPClientClass, ipv4ll_available),
+												  NULL, NULL,
+												  g_cclosure_marshal_VOID__VOID,
+												  G_TYPE_NONE, 0);
+	g_signal_set_va_marshaller (signals[SIG_IPV4LL_AVAILABLE],
+								G_TYPE_FROM_CLASS (klass),
+								g_cclosure_marshal_VOID__VOIDv);
+
+	/**
+	 * GDHCPClient::no_lease:
+	 *
+	 * The "no_lease" signal is called when FIXME.
+	 */
+	signals[SIG_NO_LEASE] = g_signal_new ("no_lease",
+										  G_TYPE_FROM_CLASS (klass),
+										  G_SIGNAL_RUN_LAST,
+										  G_STRUCT_OFFSET (GDHCPClientClass, no_lease),
+										  NULL, NULL,
+										  g_cclosure_marshal_VOID__VOID,
+										  G_TYPE_NONE, 0);
+	g_signal_set_va_marshaller (signals[SIG_NO_LEASE],
+								G_TYPE_FROM_CLASS (klass),
+								g_cclosure_marshal_VOID__VOIDv);
+
+	/**
+	 * GDHCPClient::lease_lost:
+	 *
+	 * The "lease_lost" signal is called when FIXME.
+	 */
+	signals[SIG_LEASE_LOST] = g_signal_new ("lease_lost",
+											G_TYPE_FROM_CLASS (klass),
+											G_SIGNAL_RUN_LAST,
+											G_STRUCT_OFFSET (GDHCPClientClass, lease_lost),
+											NULL, NULL,
+											g_cclosure_marshal_VOID__VOID,
+											G_TYPE_NONE, 0);
+	g_signal_set_va_marshaller (signals[SIG_LEASE_LOST],
+								G_TYPE_FROM_CLASS (klass),
+								g_cclosure_marshal_VOID__VOIDv);
+
+	/**
+	 * GDHCPClient::ipv4ll_lost:
+	 *
+	 * The "ipv4ll_lost" signal is called when FIXME.
+	 */
+	signals[SIG_IPV4LL_LOST] = g_signal_new ("ipv4ll_lost",
+											 G_TYPE_FROM_CLASS (klass),
+											 G_SIGNAL_RUN_LAST,
+											 G_STRUCT_OFFSET (GDHCPClientClass, ipv4ll_lost),
+											 NULL, NULL,
+											 g_cclosure_marshal_VOID__VOID,
+											 G_TYPE_NONE, 0);
+	g_signal_set_va_marshaller (signals[SIG_IPV4LL_LOST],
+								G_TYPE_FROM_CLASS (klass),
+								g_cclosure_marshal_VOID__VOIDv);
+
+	/**
+	 * GDHCPClient::address_conflict:
+	 *
+	 * The "address_conflict" signal is called when FIXME.
+	 */
+	signals[SIG_ADDRESS_CONFLICT] = g_signal_new ("address_conflict",
+												  G_TYPE_FROM_CLASS (klass),
+												  G_SIGNAL_RUN_LAST,
+												  G_STRUCT_OFFSET (GDHCPClientClass, address_conflict),
+												  NULL, NULL,
+												  g_cclosure_marshal_VOID__VOID,
+												  G_TYPE_NONE, 0);
+	g_signal_set_va_marshaller (signals[SIG_ADDRESS_CONFLICT],
+								G_TYPE_FROM_CLASS (klass),
+								g_cclosure_marshal_VOID__VOIDv);
+
+	/**
+	 * GDHCPClient::information_req:
+	 *
+	 * The "information_req" signal is called when FIXME.
+	 */
+	signals[SIG_INFORMATION_REQ] = g_signal_new ("information_req",
+												 G_TYPE_FROM_CLASS (klass),
+												 G_SIGNAL_RUN_LAST,
+												 G_STRUCT_OFFSET (GDHCPClientClass, information_req),
+												 NULL, NULL,
+												 g_cclosure_marshal_VOID__VOID,
+												 G_TYPE_NONE, 0);
+	g_signal_set_va_marshaller (signals[SIG_INFORMATION_REQ],
+								G_TYPE_FROM_CLASS (klass),
+								g_cclosure_marshal_VOID__VOIDv);
+
+	/**
+	 * GDHCPClient::solicitation:
+	 *
+	 * The "solicitation" signal is called when FIXME.
+	 */
+	signals[SIG_SOLICITATION] = g_signal_new ("solicitation",
+											  G_TYPE_FROM_CLASS (klass),
+											  G_SIGNAL_RUN_LAST,
+											  G_STRUCT_OFFSET (GDHCPClientClass, solicitation),
+											  NULL, NULL,
+											  g_cclosure_marshal_VOID__VOID,
+											  G_TYPE_NONE, 0);
+	g_signal_set_va_marshaller (signals[SIG_SOLICITATION],
+								G_TYPE_FROM_CLASS (klass),
+								g_cclosure_marshal_VOID__VOIDv);
+
+	/**
+	 * GDHCPClient::advertise:
+	 *
+	 * The "advertise" signal is called when FIXME.
+	 */
+	signals[SIG_ADVERTISE] = g_signal_new ("advertise",
+										   G_TYPE_FROM_CLASS (klass),
+										   G_SIGNAL_RUN_LAST,
+										   G_STRUCT_OFFSET (GDHCPClientClass, advertise),
+										   NULL, NULL,
+										   g_cclosure_marshal_VOID__VOID,
+										   G_TYPE_NONE, 0);
+	g_signal_set_va_marshaller (signals[SIG_ADVERTISE],
+								G_TYPE_FROM_CLASS (klass),
+								g_cclosure_marshal_VOID__VOIDv);
+
+	/**
+	 * GDHCPClient::rquest:
+	 *
+	 * The "rquest" signal is called when FIXME.
+	 */
+	signals[SIG_REQUEST] = g_signal_new ("rquest",
+										 G_TYPE_FROM_CLASS (klass),
+										 G_SIGNAL_RUN_LAST,
+										 G_STRUCT_OFFSET (GDHCPClientClass, rquest),
+										 NULL, NULL,
+										 g_cclosure_marshal_VOID__VOID,
+										 G_TYPE_NONE, 0);
+	g_signal_set_va_marshaller (signals[SIG_REQUEST],
+								G_TYPE_FROM_CLASS (klass),
+								g_cclosure_marshal_VOID__VOIDv);
+
+	/**
+	 * GDHCPClient::renew:
+	 *
+	 * The "renew" signal is called when FIXME.
+	 */
+	signals[SIG_RENEW] = g_signal_new ("renew",
+									   G_TYPE_FROM_CLASS (klass),
+									   G_SIGNAL_RUN_LAST,
+									   G_STRUCT_OFFSET (GDHCPClientClass, renew),
+									   NULL, NULL,
+									   g_cclosure_marshal_VOID__VOID,
+									   G_TYPE_NONE, 0);
+	g_signal_set_va_marshaller (signals[SIG_RENEW],
+								G_TYPE_FROM_CLASS (klass),
+								g_cclosure_marshal_VOID__VOIDv);
+
+	/**
+	 * GDHCPClient::rebind:
+	 *
+	 * The "rebind" signal is called when FIXME.
+	 */
+	signals[SIG_REBIND] = g_signal_new ("rebind",
+										G_TYPE_FROM_CLASS (klass),
+										G_SIGNAL_RUN_LAST,
+										G_STRUCT_OFFSET (GDHCPClientClass, rebind),
+										NULL, NULL,
+										g_cclosure_marshal_VOID__VOID,
+										G_TYPE_NONE, 0);
+	g_signal_set_va_marshaller (signals[SIG_REBIND],
+								G_TYPE_FROM_CLASS (klass),
+								g_cclosure_marshal_VOID__VOIDv);
+
+	/**
+	 * GDHCPClient::release:
+	 *
+	 * The "release" signal is called when FIXME.
+	 */
+	signals[SIG_RELEASE] = g_signal_new ("release",
+										 G_TYPE_FROM_CLASS (klass),
+										 G_SIGNAL_RUN_LAST,
+										 G_STRUCT_OFFSET (GDHCPClientClass, release),
+										 NULL, NULL,
+										 g_cclosure_marshal_VOID__VOID,
+										 G_TYPE_NONE, 0);
+	g_signal_set_va_marshaller (signals[SIG_RELEASE],
+								G_TYPE_FROM_CLASS (klass),
+								g_cclosure_marshal_VOID__VOIDv);
+
+	/**
+	 * GDHCPClient::confirm:
+	 *
+	 * The "confirm" signal is called when FIXME.
+	 */
+	signals[SIG_CONFIRM] = g_signal_new ("confirm",
+										 G_TYPE_FROM_CLASS (klass),
+										 G_SIGNAL_RUN_LAST,
+										 G_STRUCT_OFFSET (GDHCPClientClass, confirm),
+										 NULL, NULL,
+										 g_cclosure_marshal_VOID__VOID,
+										 G_TYPE_NONE, 0);
+	g_signal_set_va_marshaller (signals[SIG_CONFIRM],
+								G_TYPE_FROM_CLASS (klass),
+								g_cclosure_marshal_VOID__VOIDv);
+
+	/**
+	 * GDHCPClient::decline:
+	 *
+	 * The "decline" signal is called when FIXME.
+	 */
+	signals[SIG_DECLINE] = g_signal_new ("decline",
+										 G_TYPE_FROM_CLASS (klass),
+										 G_SIGNAL_RUN_LAST,
+										 G_STRUCT_OFFSET (GDHCPClientClass, decline),
+										 NULL, NULL,
+										 g_cclosure_marshal_VOID__VOID,
+										 G_TYPE_NONE, 0);
+	g_signal_set_va_marshaller (signals[SIG_DECLINE],
+								G_TYPE_FROM_CLASS (klass),
+								g_cclosure_marshal_VOID__VOIDv);
+}
+
+static void gdhcp_client_constructed (GObject *object)
+{
+	GDHCPClient *self = (GDHCPClient *)object;
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private (self);
+
+	G_OBJECT_CLASS (gdhcp_client_parent_class)->constructed (object);
+
+	/* do work */
+}
+
+static void gdhcp_client_dispose (GObject *object)
+{
+	GDHCPClient *self = (GDHCPClient *)object;
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private (self);
+
+	/* do work */
+
+	G_OBJECT_CLASS (gdhcp_client_parent_class)->dispose (object);
+}
 
 static inline void debug(GDHCPClient *client, const char *format, ...)
 {
@@ -1161,69 +1423,11 @@ static void remove_option_value(gpointer data)
  *
  * Returns: (transfer full): A newly created #GDHCPClient
  */
-GDHCPClient *g_dhcp_client_new(GDHCPType type,
-			int ifindex, GDHCPClientError *error)
+GDHCPClient *g_dhcp_client_new(GDHCPType type, int ifindex, GDHCPClientError *error)
 {
-	GDHCPClient *dhcp_client;
 
-	if (ifindex < 0) {
-		*error = G_DHCP_CLIENT_ERROR_INVALID_INDEX;
-		return NULL;
-	}
 
-	dhcp_client = g_try_new0(GDHCPClient, 1);
-	if (!dhcp_client) {
-		*error = G_DHCP_CLIENT_ERROR_NOMEM;
-		return NULL;
-	}
 
-	dhcp_client->interface = get_interface_name(ifindex);
-	if (!dhcp_client->interface) {
-		*error = G_DHCP_CLIENT_ERROR_INTERFACE_UNAVAILABLE;
-		goto error;
-	}
-
-	if (!interface_is_up(ifindex)) {
-		*error = G_DHCP_CLIENT_ERROR_INTERFACE_DOWN;
-		goto error;
-	}
-
-	get_interface_mac_address(ifindex, dhcp_client->mac_address);
-
-	dhcp_client->listener_sockfd = -1;
-	dhcp_client->listen_mode = L_NONE;
-	dhcp_client->ref_count = 1;
-	dhcp_client->type = type;
-	dhcp_client->ifindex = ifindex;
-	dhcp_client->lease_available_cb = NULL;
-	dhcp_client->ipv4ll_available_cb = NULL;
-	dhcp_client->no_lease_cb = NULL;
-	dhcp_client->lease_lost_cb = NULL;
-	dhcp_client->ipv4ll_lost_cb = NULL;
-	dhcp_client->address_conflict_cb = NULL;
-	dhcp_client->listener_watch = 0;
-	dhcp_client->retry_times = 0;
-	dhcp_client->ack_retry_times = 0;
-	dhcp_client->code_value_hash = g_hash_table_new_full(g_direct_hash,
-				g_direct_equal, NULL, remove_option_value);
-	dhcp_client->send_value_hash = g_hash_table_new_full(g_direct_hash,
-				g_direct_equal, NULL, g_free);
-	dhcp_client->request_list = NULL;
-	dhcp_client->require_list = NULL;
-	dhcp_client->duid = NULL;
-	dhcp_client->duid_len = 0;
-	dhcp_client->last_request = time(NULL);
-	dhcp_client->expire = 0;
-	dhcp_client->request_bcast = false;
-
-	*error = G_DHCP_CLIENT_ERROR_NONE;
-
-	return dhcp_client;
-
-error:
-	g_free(dhcp_client->interface);
-	g_free(dhcp_client);
-	return NULL;
 }
 
 #define SERVER_AND_CLIENT_PORTS  ((67 << 16) + 68)
@@ -1464,9 +1668,8 @@ static int ipv4ll_recv_arp_packet(GDHCPClient *dhcp_client)
 	if (dhcp_client->state == IPV4LL_DEFEND) {
 		if (!source_conflict)
 			return 0;
-		else if (dhcp_client->ipv4ll_lost_cb)
-			dhcp_client->ipv4ll_lost_cb(dhcp_client,
-						dhcp_client->ipv4ll_lost_data);
+		else
+			g_signal_emit (dhcp_client, signals[SIG_IPV4LL_LOST], 0);
 	}
 
 	ipv4ll_stop(dhcp_client);
@@ -1485,9 +1688,9 @@ static int ipv4ll_recv_arp_packet(GDHCPClient *dhcp_client)
 	 * to wait RATE_LIMIT_INTERVAL before retrying,
 	 * but we just report failure.
 	 */
-	else if (dhcp_client->no_lease_cb)
-			dhcp_client->no_lease_cb(dhcp_client,
-						dhcp_client->no_lease_data);
+	else {
+		g_signal_emit (dhcp_client, signals[SIG_NO_LEASE], 0);
+	}
 
 	return 0;
 }
@@ -1611,9 +1814,7 @@ static void start_request(GDHCPClient *dhcp_client)
 					dhcp_client->retry_times);
 
 	if (dhcp_client->retry_times == REQUEST_RETRIES) {
-		if (dhcp_client->no_lease_cb)
-			dhcp_client->no_lease_cb(dhcp_client,
-						dhcp_client->no_lease_data);
+		g_signal_emit (dhcp_client, signals[SIG_NO_LEASE], 0);
 		return;
 	}
 
@@ -1674,9 +1875,7 @@ static gboolean start_expire(gpointer user_data)
 	restart_dhcp(dhcp_client, 0);
 
 	/* ip need to be cleared */
-	if (dhcp_client->lease_lost_cb)
-		dhcp_client->lease_lost_cb(dhcp_client,
-				dhcp_client->lease_lost_data);
+	g_signal_emit (dhcp_client, signals[SIG_LEASE_LOST], 0);
 
 	return false;
 }
@@ -2432,9 +2631,7 @@ static gboolean listener_event(GIOChannel *channel, GIOCondition condition,
 			}
 
 			/* Address should be set up here */
-			if (dhcp_client->lease_available_cb)
-				dhcp_client->lease_available_cb(dhcp_client,
-					dhcp_client->lease_available_data);
+			g_signal_emit (dhcp_client, signals[SIG_LEASE_AVAILABLE], 0);
 
 			start_bound(dhcp_client);
 		} else if (*message_type == DHCPNAK) {
@@ -2494,19 +2691,16 @@ static gboolean listener_event(GIOChannel *channel, GIOCondition condition,
 					&dhcp_client->status_code);
 
 		if (packet6->message == DHCPV6_ADVERTISE) {
-			if (dhcp_client->advertise_cb)
-				dhcp_client->advertise_cb(dhcp_client,
-						dhcp_client->advertise_data);
+			g_signal_emit (dhcp_client, signals[SIG_ADVERTISE], 0);
 			return TRUE;
 		}
 
-		if (dhcp_client->solicitation_cb) {
+		if (g_signal_has_handler_pending (dhcp_client, signals[SIG_SOLICITATION], 0, FALSE)) {
 			/*
 			 * The dhcp_client might not be valid after the
 			 * callback call so just return immediately.
 			 */
-			dhcp_client->solicitation_cb(dhcp_client,
-					dhcp_client->solicitation_data);
+			g_signal_emit (dhcp_client, signals[SIG_SOLICITATION], 0);
 			return TRUE;
 		}
 		break;
@@ -2561,41 +2755,35 @@ static gboolean listener_event(GIOChannel *channel, GIOCondition condition,
 		get_dhcpv6_request(dhcp_client, packet6, pkt_len,
 						&dhcp_client->status_code);
 
-		if (dhcp_client->information_req_cb) {
+		if (g_signal_has_handler_pending (dhcp_client, signals[SIG_INFORMATION_REQ], 0, FALSE)) {
 			/*
 			 * The dhcp_client might not be valid after the
 			 * callback call so just return immediately.
 			 */
-			dhcp_client->information_req_cb(dhcp_client,
-					dhcp_client->information_req_data);
+			g_signal_emit (dhcp_client, signals[SIG_INFORMATION_REQ], 0);
 			return TRUE;
 		}
-		if (dhcp_client->request_cb) {
-			dhcp_client->request_cb(dhcp_client,
-					dhcp_client->request_data);
+		if (g_signal_has_handler_pending (dhcp_client, signals[SIG_REQUEST], 0, FALSE)) {
+			g_signal_emit (dhcp_client, signals[SIG_REQUEST], 0);
 			return TRUE;
 		}
-		if (dhcp_client->renew_cb) {
-			dhcp_client->renew_cb(dhcp_client,
-					dhcp_client->renew_data);
+		if (g_signal_has_handler_pending (dhcp_client, signals[SIG_RENEW], 0, FALSE)) {
+			g_signal_emit (dhcp_client, signals[SIG_RENEW], 0);
 			return TRUE;
 		}
-		if (dhcp_client->rebind_cb) {
-			dhcp_client->rebind_cb(dhcp_client,
-					dhcp_client->rebind_data);
+		if (g_signal_has_handler_pending (dhcp_client, signals[SIG_REBIND], 0, FALSE)) {
+			g_signal_emit (dhcp_client, signals[SIG_REBIND], 0);
 			return TRUE;
 		}
-		if (dhcp_client->release_cb) {
-			dhcp_client->release_cb(dhcp_client,
-					dhcp_client->release_data);
+		if (g_signal_has_handler_pending (dhcp_client, signals[SIG_RELEASE], 0, FALSE)) {
+			g_signal_emit (dhcp_client, signals[SIG_RELEASE], 0);
 			return TRUE;
 		}
-		if (dhcp_client->decline_cb) {
-			dhcp_client->decline_cb(dhcp_client,
-					dhcp_client->decline_data);
+		if (g_signal_has_handler_pending (dhcp_client, signals[SIG_DECLINE], 0, FALSE)) {
+			g_signal_emit (dhcp_client, signals[SIG_DECLINE], 0);
 			return TRUE;
 		}
-		if (dhcp_client->confirm_cb) {
+		if (g_signal_has_handler_pending (dhcp_client, signals[SIG_CONFIRM], 0, FALSE)) {
 			count = 0;
 			server_id = dhcpv6_get_option(packet6, pkt_len,
 						G_DHCPV6_SERVERID, &option_len,
@@ -2615,8 +2803,7 @@ static gboolean listener_event(GIOChannel *channel, GIOCondition condition,
 			memcpy(dhcp_client->server_duid, server_id, option_len);
 			dhcp_client->server_duid_len = option_len;
 
-			dhcp_client->confirm_cb(dhcp_client,
-						dhcp_client->confirm_data);
+			g_signal_emit (dhcp_client, signals[SIG_CONFIRM], 0);
 			return TRUE;
 		}
 		break;
@@ -2693,9 +2880,7 @@ static gboolean ipv4ll_announce_timeout(gpointer dhcp_data)
 	dhcp_client->state = IPV4LL_MONITOR;
 	dhcp_client->assigned_ip = get_ip(ip);
 
-	if (dhcp_client->ipv4ll_available_cb)
-		dhcp_client->ipv4ll_available_cb(dhcp_client,
-					dhcp_client->ipv4ll_available_data);
+	g_signal_emit (dhcp_client, signals[SIG_IPV4LL_AVAILABLE], 0);
 	dhcp_client->conflicts = 0;
 	dhcp_client->timeout = 0;
 
@@ -2733,7 +2918,7 @@ int g_dhcp_client_start(GDHCPClient *dhcp_client, const char *last_address)
 	remove_timeouts(dhcp_client);
 
 	if (dhcp_client->type == G_DHCP_IPV6) {
-		if (dhcp_client->information_req_cb) {
+		if (g_signal_has_handler_pending (dhcp_client, signals[SIG_INFORMATION_REQ], 0, FALSE)) {
 			dhcp_client->state = INFORMATION_REQ;
 			re = switch_listening_mode(dhcp_client, L3);
 			if (re != 0) {
@@ -2743,7 +2928,7 @@ int g_dhcp_client_start(GDHCPClient *dhcp_client, const char *last_address)
 			}
 			send_information_req(dhcp_client);
 
-		} else if (dhcp_client->solicitation_cb) {
+		} else if (g_signal_has_handler_pending (dhcp_client, signals[SIG_SOLICITATION], 0, FALSE)) {
 			dhcp_client->state = SOLICITATION;
 			re = switch_listening_mode(dhcp_client, L3);
 			if (re != 0) {
@@ -2753,7 +2938,7 @@ int g_dhcp_client_start(GDHCPClient *dhcp_client, const char *last_address)
 			}
 			send_solicitation(dhcp_client);
 
-		} else if (dhcp_client->request_cb) {
+		} else if (g_signal_has_handler_pending (dhcp_client, signals[SIG_REQUEST], 0, FALSE)) {
 			dhcp_client->state = REQUEST;
 			re = switch_listening_mode(dhcp_client, L3);
 			if (re != 0) {
@@ -2763,7 +2948,7 @@ int g_dhcp_client_start(GDHCPClient *dhcp_client, const char *last_address)
 			}
 			send_dhcpv6_request(dhcp_client);
 
-		} else if (dhcp_client->confirm_cb) {
+		} else if (g_signal_has_handler_pending (dhcp_client, signals[SIG_CONFIRM], 0, FALSE)) {
 			dhcp_client->state = CONFIRM;
 			re = switch_listening_mode(dhcp_client, L3);
 			if (re != 0) {
@@ -2773,7 +2958,7 @@ int g_dhcp_client_start(GDHCPClient *dhcp_client, const char *last_address)
 			}
 			send_dhcpv6_confirm(dhcp_client);
 
-		} else if (dhcp_client->renew_cb) {
+		} else if (g_signal_has_handler_pending (dhcp_client, signals[SIG_RENEW], 0, FALSE)) {
 			dhcp_client->state = RENEW;
 			re = switch_listening_mode(dhcp_client, L3);
 			if (re != 0) {
@@ -2783,7 +2968,7 @@ int g_dhcp_client_start(GDHCPClient *dhcp_client, const char *last_address)
 			}
 			send_dhcpv6_renew(dhcp_client);
 
-		} else if (dhcp_client->rebind_cb) {
+		} else if (g_signal_has_handler_pending (dhcp_client, signals[SIG_REBIND], 0, FALSE)) {
 			dhcp_client->state = REBIND;
 			re = switch_listening_mode(dhcp_client, L3);
 			if (re != 0) {
@@ -2793,7 +2978,7 @@ int g_dhcp_client_start(GDHCPClient *dhcp_client, const char *last_address)
 			}
 			send_dhcpv6_rebind(dhcp_client);
 
-		} else if (dhcp_client->release_cb) {
+		} else if (g_signal_has_handler_pending (dhcp_client, signals[SIG_RELEASE], 0, FALSE)) {
 			dhcp_client->state = RENEW;
 			re = switch_listening_mode(dhcp_client, L3);
 			if (re != 0) {
@@ -2802,7 +2987,8 @@ int g_dhcp_client_start(GDHCPClient *dhcp_client, const char *last_address)
 				return re;
 			}
 			send_dhcpv6_release(dhcp_client);
-		} else if (dhcp_client->decline_cb) {
+
+		} else if (g_signal_has_handler_pending (dhcp_client, signals[SIG_DECLINE], 0, FALSE)) {
 			dhcp_client->state = DECLINE;
 			re = switch_listening_mode(dhcp_client, L3);
 			if (re != 0) {
@@ -2823,9 +3009,7 @@ int g_dhcp_client_start(GDHCPClient *dhcp_client, const char *last_address)
 	}
 
 	if (dhcp_client->retry_times == DISCOVER_RETRIES) {
-		if (dhcp_client->no_lease_cb)
-			dhcp_client->no_lease_cb(dhcp_client,
-						dhcp_client->no_lease_data);
+		g_signal_emit (dhcp_client, signals[SIG_NO_LEASE], 0);
 		dhcp_client->retry_times = 0;
 		return 0;
 	}
@@ -2912,97 +3096,6 @@ GList *g_dhcp_client_get_option(GDHCPClient *dhcp_client,
 {
 	return g_hash_table_lookup(dhcp_client->code_value_hash,
 					GINT_TO_POINTER((int) option_code));
-}
-
-void g_dhcp_client_register_event(GDHCPClient *dhcp_client,
-					GDHCPClientEvent event,
-					GDHCPClientEventFunc func,
-							gpointer data)
-{
-	switch (event) {
-	case G_DHCP_CLIENT_EVENT_LEASE_AVAILABLE:
-		dhcp_client->lease_available_cb = func;
-		dhcp_client->lease_available_data = data;
-		return;
-	case G_DHCP_CLIENT_EVENT_IPV4LL_AVAILABLE:
-		if (dhcp_client->type == G_DHCP_IPV6)
-			return;
-		dhcp_client->ipv4ll_available_cb = func;
-		dhcp_client->ipv4ll_available_data = data;
-		return;
-	case G_DHCP_CLIENT_EVENT_NO_LEASE:
-		dhcp_client->no_lease_cb = func;
-		dhcp_client->no_lease_data = data;
-		return;
-	case G_DHCP_CLIENT_EVENT_LEASE_LOST:
-		dhcp_client->lease_lost_cb = func;
-		dhcp_client->lease_lost_data = data;
-		return;
-	case G_DHCP_CLIENT_EVENT_IPV4LL_LOST:
-		if (dhcp_client->type == G_DHCP_IPV6)
-			return;
-		dhcp_client->ipv4ll_lost_cb = func;
-		dhcp_client->ipv4ll_lost_data = data;
-		return;
-	case G_DHCP_CLIENT_EVENT_ADDRESS_CONFLICT:
-		dhcp_client->address_conflict_cb = func;
-		dhcp_client->address_conflict_data = data;
-		return;
-	case G_DHCP_CLIENT_EVENT_INFORMATION_REQ:
-		if (dhcp_client->type != G_DHCP_IPV6)
-			return;
-		dhcp_client->information_req_cb = func;
-		dhcp_client->information_req_data = data;
-		return;
-	case G_DHCP_CLIENT_EVENT_SOLICITATION:
-		if (dhcp_client->type != G_DHCP_IPV6)
-			return;
-		dhcp_client->solicitation_cb = func;
-		dhcp_client->solicitation_data = data;
-		return;
-	case G_DHCP_CLIENT_EVENT_ADVERTISE:
-		if (dhcp_client->type != G_DHCP_IPV6)
-			return;
-		dhcp_client->advertise_cb = func;
-		dhcp_client->advertise_data = data;
-		return;
-	case G_DHCP_CLIENT_EVENT_REQUEST:
-		if (dhcp_client->type != G_DHCP_IPV6)
-			return;
-		dhcp_client->request_cb = func;
-		dhcp_client->request_data = data;
-		return;
-	case G_DHCP_CLIENT_EVENT_RENEW:
-		if (dhcp_client->type != G_DHCP_IPV6)
-			return;
-		dhcp_client->renew_cb = func;
-		dhcp_client->renew_data = data;
-		return;
-	case G_DHCP_CLIENT_EVENT_REBIND:
-		if (dhcp_client->type != G_DHCP_IPV6)
-			return;
-		dhcp_client->rebind_cb = func;
-		dhcp_client->rebind_data = data;
-		return;
-	case G_DHCP_CLIENT_EVENT_RELEASE:
-		if (dhcp_client->type != G_DHCP_IPV6)
-			return;
-		dhcp_client->release_cb = func;
-		dhcp_client->release_data = data;
-		return;
-	case G_DHCP_CLIENT_EVENT_CONFIRM:
-		if (dhcp_client->type != G_DHCP_IPV6)
-			return;
-		dhcp_client->confirm_cb = func;
-		dhcp_client->confirm_data = data;
-		return;
-	case G_DHCP_CLIENT_EVENT_DECLINE:
-		if (dhcp_client->type != G_DHCP_IPV6)
-			return;
-		dhcp_client->decline_cb = func;
-		dhcp_client->decline_data = data;
-		return;
-	}
 }
 
 int g_dhcp_client_get_index(GDHCPClient *dhcp_client)
