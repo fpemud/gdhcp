@@ -91,36 +91,36 @@ struct dhcpv6_packet {
 
 
 /* See RFC 2132 */
-#define DHCP_PADDING		0x00
-#define DHCP_SUBNET		0x01
-#define DHCP_ROUTER		0x03
-#define DHCP_TIME_SERVER	0x04
-#define DHCP_NAME_SERVER	0x05
-#define DHCP_DNS_SERVER		0x06
-#define DHCP_HOST_NAME		0x0c
-#define DHCP_DOMAIN_NAME	0x0f
-#define DHCP_NTP_SERVER		0x2a
-#define DHCP_REQUESTED_IP	0x32
-#define DHCP_LEASE_TIME		0x33
+#define DHCP_PADDING			0x00
+#define DHCP_SUBNET				0x01
+#define DHCP_ROUTER				0x03
+#define DHCP_TIME_SERVER		0x04
+#define DHCP_NAME_SERVER		0x05
+#define DHCP_DNS_SERVER			0x06
+#define DHCP_HOST_NAME			0x0c
+#define DHCP_DOMAIN_NAME		0x0f
+#define DHCP_NTP_SERVER			0x2a
+#define DHCP_REQUESTED_IP		0x32
+#define DHCP_LEASE_TIME			0x33
 #define DHCP_OPTION_OVERLOAD	0x34
-#define DHCP_MESSAGE_TYPE	0x35
-#define DHCP_SERVER_ID		0x36
-#define DHCP_PARAM_REQ		0x37
-#define DHCP_ERR_MESSAGE	0x38
-#define DHCP_MAX_SIZE		0x39
-#define DHCP_VENDOR		0x3c
-#define DHCP_CLIENT_ID		0x3d
-#define DHCP_END		0xff
+#define DHCP_MESSAGE_TYPE		0x35
+#define DHCP_SERVER_ID			0x36
+#define DHCP_PARAM_REQ			0x37
+#define DHCP_ERR_MESSAGE		0x38
+#define DHCP_MAX_SIZE			0x39
+#define DHCP_VENDOR				0x3c
+#define DHCP_CLIENT_ID			0x3d
+#define DHCP_END				0xff
 
 #define OPT_CODE		0
 #define OPT_LEN			1
 #define OPT_DATA		2
-#define OPTION_FIELD		0
+#define OPTION_FIELD	0
 #define FILE_FIELD		1
 #define SNAME_FIELD		2
 
 /* DHCP_MESSAGE_TYPE values */
-#define DHCPDISCOVER		1
+#define DHCPDISCOVER	1
 #define DHCPOFFER		2
 #define DHCPREQUEST		3
 #define DHCPDECLINE		4
@@ -128,20 +128,20 @@ struct dhcpv6_packet {
 #define DHCPNAK			6
 #define DHCPRELEASE		7
 #define DHCPINFORM		8
-#define DHCP_MINTYPE DHCPDISCOVER
-#define DHCP_MAXTYPE DHCPINFORM
+#define DHCP_MINTYPE 	DHCPDISCOVER
+#define DHCP_MAXTYPE 	DHCPINFORM
 
 /* Message types for DHCPv6, RFC 3315 sec 5.3 */
-#define DHCPV6_SOLICIT		1
-#define DHCPV6_ADVERTISE	2
-#define DHCPV6_REQUEST		3
-#define DHCPV6_CONFIRM		4
-#define DHCPV6_RENEW		5
-#define DHCPV6_REBIND		6
-#define DHCPV6_REPLY		7
-#define DHCPV6_RELEASE		8
-#define DHCPV6_DECLINE		9
-#define DHCPV6_RECONFIGURE	10
+#define DHCPV6_SOLICIT			1
+#define DHCPV6_ADVERTISE		2
+#define DHCPV6_REQUEST			3
+#define DHCPV6_CONFIRM			4
+#define DHCPV6_RENEW			5
+#define DHCPV6_REBIND			6
+#define DHCPV6_REPLY			7
+#define DHCPV6_RELEASE			8
+#define DHCPV6_DECLINE			9
+#define DHCPV6_RECONFIGURE		10
 #define DHCPV6_INFORMATION_REQ	11
 
 /*

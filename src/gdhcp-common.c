@@ -40,23 +40,23 @@
 #include "gdhcp-unaligned.h"
 
 static const DHCPOption client_options[] = {
-	{ OPTION_IP,			0x01 }, /* subnet-mask */
+	{ OPTION_IP,				0x01 }, /* subnet-mask */
 	{ OPTION_IP | OPTION_LIST,	0x03 }, /* routers */
 	{ OPTION_IP | OPTION_LIST,	0x06 }, /* domain-name-servers */
-	{ OPTION_STRING,		0x0c }, /* hostname */
-	{ OPTION_STRING,		0x0f }, /* domain-name */
-	{ OPTION_U16,			0x1a }, /* mtu */
+	{ OPTION_STRING,			0x0c }, /* hostname */
+	{ OPTION_STRING,			0x0f }, /* domain-name */
+	{ OPTION_U16,				0x1a }, /* mtu */
 	{ OPTION_IP | OPTION_LIST,	0x2a }, /* ntp-servers */
-	{ OPTION_U32,			0x33 }, /* dhcp-lease-time */
+	{ OPTION_U32,				0x33 }, /* dhcp-lease-time */
 	/* Options below will not be exposed to user */
-	{ OPTION_IP,			0x32 }, /* requested-ip */
-	{ OPTION_U8,			0x35 }, /* message-type */
-	{ OPTION_U32,			0x36 }, /* server-id */
-	{ OPTION_U16,			0x39 }, /* max-size */
-	{ OPTION_STRING,		0x3c }, /* vendor */
-	{ OPTION_STRING,		0x3d }, /* client-id */
-	{ OPTION_STRING,		0xfc }, /* UNOFFICIAL proxy-pac */
-	{ OPTION_UNKNOWN,		0x00 },
+	{ OPTION_IP,				0x32 }, /* requested-ip */
+	{ OPTION_U8,				0x35 }, /* message-type */
+	{ OPTION_U32,				0x36 }, /* server-id */
+	{ OPTION_U16,				0x39 }, /* max-size */
+	{ OPTION_STRING,			0x3c }, /* vendor */
+	{ OPTION_STRING,			0x3d }, /* client-id */
+	{ OPTION_STRING,			0xfc }, /* UNOFFICIAL proxy-pac */
+	{ OPTION_UNKNOWN,			0x00 },
 };
 
 #define URANDOM "/dev/urandom"
@@ -376,10 +376,10 @@ void dhcp_init_header(struct dhcp_packet *packet, char type)
 	packet->op = BOOTREQUEST;
 
 	switch (type) {
-	case DHCPOFFER:
-	case DHCPACK:
-	case DHCPNAK:
-		packet->op = BOOTREPLY;
+		case DHCPOFFER:
+		case DHCPACK:
+		case DHCPNAK:
+			packet->op = BOOTREPLY;
 	}
 
 	packet->htype = 1;
