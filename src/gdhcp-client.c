@@ -540,7 +540,6 @@ static int32_t get_time_diff(struct timeval *tv)
 
 static void remove_timeouts(GDHCPClient *dhcp_client)
 {
-
 	if (dhcp_client->timeout > 0)
 		g_source_remove(dhcp_client->timeout);
 	if (dhcp_client->t1_timeout > 0)
@@ -554,7 +553,6 @@ static void remove_timeouts(GDHCPClient *dhcp_client)
 	dhcp_client->t1_timeout = 0;
 	dhcp_client->t2_timeout = 0;
 	dhcp_client->lease_timeout = 0;
-
 }
 
 static void add_dhcpv6_request_options(GDHCPClient *dhcp_client,
@@ -798,11 +796,10 @@ static int switch_listening_mode(GDHCPClient *dhcp_client,
 
 static gboolean send_probe_packet(gpointer dhcp_data)
 {
-	GDHCPClient *dhcp_client;
+	GDHCPClient *dhcp_client = dhcp_data;
 	guint timeout;
 
-	dhcp_client = dhcp_data;
-	/* if requested_ip is not valid, pick a new address*/
+	/* if requested_ip is not valid, pick a new address */
 	if (dhcp_client->requested_ip == 0) {
 		debug(dhcp_client, "pick a new random address");
 		dhcp_client->requested_ip = ipv4ll_random_ip();
@@ -818,9 +815,9 @@ static gboolean send_probe_packet(gpointer dhcp_data)
 			dhcp_client->requested_ip, dhcp_client->ifindex);
 
 	if (dhcp_client->retry_times < PROBE_NUM) {
-		/*add a random timeout in range of PROBE_MIN to PROBE_MAX*/
-		timeout = ipv4ll_random_delay_ms(PROBE_MAX-PROBE_MIN);
-		timeout += PROBE_MIN*1000;
+		/* add a random timeout in range of PROBE_MIN to PROBE_MAX */
+		timeout = ipv4ll_random_delay_ms(PROBE_MAX - PROBE_MIN);
+		timeout += PROBE_MIN * 1000;
 	} else
 		timeout = (ANNOUNCE_WAIT * 1000);
 
@@ -832,15 +829,11 @@ static gboolean send_probe_packet(gpointer dhcp_data)
 	return FALSE;
 }
 
-static gboolean ipv4ll_announce_timeout(gpointer dhcp_data);
+static gboolean ipv4ll_announce_timeout(gpointer user_data);
 static gboolean ipv4ll_defend_timeout(gpointer dhcp_data);
 
-static gboolean send_announce_packet(gpointer dhcp_data)
+static gboolean send_announce_packet(GDHCPClient *dhcp_client)
 {
-	GDHCPClient *dhcp_client;
-
-	dhcp_client = dhcp_data;
-
 	debug(dhcp_client, "sending IPV4LL announce request");
 
 	ipv4ll_send_arp_packet(dhcp_client->mac_address,
@@ -1659,7 +1652,7 @@ static int ipv4ll_recv_arp_packet(GDHCPClient *dhcp_client)
 		dhcp_client->state = IPV4LL_DEFEND;
 		debug(dhcp_client, "DEFEND mode conflicts : %d",
 			dhcp_client->conflicts);
-		/*Try to defend with a single announce*/
+		/* Try to defend with a single announce */
 		send_announce_packet(dhcp_client);
 		return 0;
 	}
@@ -1682,12 +1675,11 @@ static int ipv4ll_recv_arp_packet(GDHCPClient *dhcp_client)
 					send_probe_packet,
 					dhcp_client,
 					NULL);
-	}
-	/* Here we got a lot of conflicts, RFC3927 states that we have
-	 * to wait RATE_LIMIT_INTERVAL before retrying,
-	 * but we just report failure.
-	 */
-	else {
+	} else {
+		/* Here we got a lot of conflicts, RFC3927 states that we have
+		* to wait RATE_LIMIT_INTERVAL before retrying,
+		* but we just report failure.
+		*/
 		g_signal_emit (dhcp_client, signals[SIG_NO_LEASE], 0);
 	}
 
@@ -2860,9 +2852,9 @@ static gboolean ipv4ll_defend_timeout(gpointer dhcp_data)
 	return FALSE;
 }
 
-static gboolean ipv4ll_announce_timeout(gpointer dhcp_data)
+static gboolean ipv4ll_announce_timeout(gpointer user_data)
 {
-	GDHCPClient *dhcp_client = dhcp_data;
+	GDHCPClient *dhcp_client = user_data;
 	uint32_t ip;
 
 	debug(dhcp_client, "request timeout (retries %d)",
