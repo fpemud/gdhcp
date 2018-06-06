@@ -1602,7 +1602,6 @@ static void ipv4ll_start(GDHCPClient *dhcp_client)
 
 static void ipv4ll_stop(GDHCPClient *dhcp_client)
 {
-
 	switch_listening_mode(dhcp_client, L_NONE);
 
 	remove_timeouts(dhcp_client);

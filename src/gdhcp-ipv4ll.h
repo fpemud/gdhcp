@@ -32,16 +32,16 @@ extern "C" {
 #define LINKLOCAL_ADDR 0xa9fe0000
 
 /* See RFC 3927 */
-#define PROBE_WAIT	     1
-#define PROBE_NUM	     3
-#define PROBE_MIN	     1
-#define PROBE_MAX	     2
-#define ANNOUNCE_WAIT	     2
-#define ANNOUNCE_NUM	     2
-#define ANNOUNCE_INTERVAL    2
-#define MAX_CONFLICTS	    10
-#define RATE_LIMIT_INTERVAL 60
-#define DEFEND_INTERVAL	    10
+#define PROBE_WAIT			1
+#define PROBE_NUM			3
+#define PROBE_MIN			1
+#define PROBE_MAX			2
+#define ANNOUNCE_WAIT		2
+#define ANNOUNCE_NUM		2
+#define ANNOUNCE_INTERVAL	2
+#define MAX_CONFLICTS		10
+#define RATE_LIMIT_INTERVAL	60
+#define DEFEND_INTERVAL		10
 
 uint32_t ipv4ll_random_ip(void);
 guint ipv4ll_random_delay_ms(guint secs);
