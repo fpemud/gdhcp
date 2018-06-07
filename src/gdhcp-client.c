@@ -82,7 +82,6 @@ typedef enum _dhcp_client_state {
 } ClientState;
 
 typedef struct {
-	int ref_count;
 	GDHCPType type;
 	ClientState state;
 	int ifindex;
@@ -403,22 +402,49 @@ static void gdhcp_client_class_init (GDHCPClientClass *klass)
 
 static void gdhcp_client_constructed (GObject *object)
 {
-	GDHCPClient *self = (GDHCPClient *)object;
-	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private (self);
+	GDHCPClient *dhcp_client = (GDHCPClient *)object;
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private (dhcp_client);
 
 	G_OBJECT_CLASS (gdhcp_client_parent_class)->constructed (object);
 
-	/* do work */
+	priv->listener_sockfd = -1;
+	priv->listen_mode = L_NONE;
+	priv->type = 0;							// fixme
+	priv->ifindex = 0;						// fixme
+	priv->listener_watch = 0;
+	priv->retry_times = 0;
+	priv->ack_retry_times = 0;
+	priv->code_value_hash = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, remove_option_value);
+	priv->send_value_hash = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, g_free);
+	priv->request_list = NULL;
+	priv->require_list = NULL;
+	priv->duid = NULL;
+	priv->duid_len = 0;
+	priv->last_request = time(NULL);
+	priv->expire = 0;
+	priv->request_bcast = false;
 }
 
 static void gdhcp_client_dispose (GObject *object)
 {
-	GDHCPClient *self = (GDHCPClient *)object;
-	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private (self);
+	GDHCPClient *dhcp_client = (GDHCPClient *)object;
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
 
-	/* do work */
+	g_dhcp_client_stop(dhcp_client);
 
-	G_OBJECT_CLASS (gdhcp_client_parent_class)->dispose (object);
+	g_free(priv->interface);
+	g_free(priv->assigned_ip);
+	g_free(priv->last_address);
+	g_free(priv->duid);
+	g_free(priv->server_duid);
+
+	g_list_free(priv->request_list);
+	g_list_free(priv->require_list);
+
+	g_hash_table_destroy(priv->code_value_hash);
+	g_hash_table_destroy(priv->send_value_hash);
+
+	G_OBJECT_CLASS (gdhcp_client_parent_class)->dispose(object);
 }
 
 static inline void debug(GDHCPClient *client, const char *format, ...)
@@ -1415,11 +1441,47 @@ static void remove_option_value(gpointer data)
  *
  * Returns: (transfer full): A newly created #GDHCPClient
  */
-GDHCPClient *g_dhcp_client_new(GDHCPType type, int ifindex, GDHCPClientError *error)
+GDHCPClient *g_dhcp_client_new(GDHCPType type, int ifindex, GError **error)
 {
+	GDHCPClient *dhcp_client;
+	GDHCPClientPrivate *priv;
 
+	g_assert(type == G_DHCP_IPV4 || type == G_DHCP_IPV6 || type == G_DHCP_IPV4LL);
+	g_assert(ifindex > 0);
 
+	dhcp_client = g_object_new(GDHCP_TYPE_CLIENT, NULL);
+	if (!dhcp_client) {
+		return NULL;
+	}
 
+	priv = gdhcp_client_get_instance_private(dhcp_client);
+
+	priv->interface = get_interface_name(ifindex);
+	if (!priv->interface) {
+		g_object_unref(dhcp_client);
+		g_set_error_literal(error,
+							g_quark_from_string("fixme"),
+							1,
+							"Interface unavailable");
+		return NULL;
+	}
+
+	if (!interface_is_up(ifindex)) {
+		g_free(priv->interface);
+		g_object_unref(dhcp_client);
+		g_set_error_literal(error,
+							g_quark_from_string("fixme"),
+							1,
+							"Interface down");
+		return NULL;
+	}
+
+	get_interface_mac_address(ifindex, priv->mac_address);
+
+	priv->type = type;
+	priv->ifindex = ifindex;
+
+	return dhcp_client;
 }
 
 #define SERVER_AND_CLIENT_PORTS  ((67 << 16) + 68)
@@ -3296,41 +3358,6 @@ uint16_t g_dhcp_v6_client_get_status(GDHCPClient *dhcp_client)
 		return 0;
 
 	return dhcp_client->status_code;
-}
-
-GDHCPClient *g_dhcp_client_ref(GDHCPClient *dhcp_client)
-{
-	if (!dhcp_client)
-		return NULL;
-
-	__sync_fetch_and_add(&dhcp_client->ref_count, 1);
-
-	return dhcp_client;
-}
-
-void g_dhcp_client_unref(GDHCPClient *dhcp_client)
-{
-	if (!dhcp_client)
-		return;
-
-	if (__sync_fetch_and_sub(&dhcp_client->ref_count, 1) != 1)
-		return;
-
-	g_dhcp_client_stop(dhcp_client);
-
-	g_free(dhcp_client->interface);
-	g_free(dhcp_client->assigned_ip);
-	g_free(dhcp_client->last_address);
-	g_free(dhcp_client->duid);
-	g_free(dhcp_client->server_duid);
-
-	g_list_free(dhcp_client->request_list);
-	g_list_free(dhcp_client->require_list);
-
-	g_hash_table_destroy(dhcp_client->code_value_hash);
-	g_hash_table_destroy(dhcp_client->send_value_hash);
-
-	g_free(dhcp_client);
 }
 
 void g_dhcp_client_set_debug(GDHCPClient *dhcp_client,

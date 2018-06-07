@@ -167,9 +167,6 @@ typedef void (*GDHCPClientEventFunc) (GDHCPClient *client, gpointer user_data);
 typedef void (*GDHCPDebugFunc)(const char *str, gpointer user_data);
 
 GDHCP_EXTERN
-GQuark g_dhcp_client_error_quark(void);
-
-GDHCP_EXTERN
 GDHCPClient *g_dhcp_client_new(GDHCPType type, int index, GDHCPClientError *error);
 
 GDHCP_EXTERN
@@ -177,12 +174,6 @@ int g_dhcp_client_start(GDHCPClient *client, const char *last_address);
 
 GDHCP_EXTERN
 void g_dhcp_client_stop(GDHCPClient *client);
-
-GDHCP_EXTERN
-GDHCPClient *g_dhcp_client_ref(GDHCPClient *client);
-
-GDHCP_EXTERN
-void g_dhcp_client_unref(GDHCPClient *client);
 
 GDHCP_EXTERN
 GDHCPClientError g_dhcp_client_set_request(GDHCPClient *client, unsigned int option_code);
