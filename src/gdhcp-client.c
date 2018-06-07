@@ -466,27 +466,28 @@ static inline void debug(GDHCPClient *client, const char *format, ...)
 /* Initialize the packet with the proper defaults */
 static void init_packet(GDHCPClient *dhcp_client, gpointer pkt, char type)
 {
-	if (dhcp_client->type == G_DHCP_IPV6)
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
+
+	if (priv->type == G_DHCP_IPV6)
 		dhcpv6_init_header(pkt, type);
 	else {
 		struct dhcp_packet *packet = pkt;
 
 		dhcp_init_header(packet, type);
-		memcpy(packet->chaddr, dhcp_client->mac_address, 6);
+		memcpy(packet->chaddr, priv->mac_address, 6);
 	}
 }
 
-static void add_request_options(GDHCPClient *dhcp_client,
-				struct dhcp_packet *packet)
+static void add_request_options(GDHCPClient *dhcp_client, struct dhcp_packet *packet)
 {
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
 	int len = 0;
 	GList *list;
 	uint8_t code;
 	int end = dhcp_end_option(packet->options);
 
-	for (list = dhcp_client->request_list; list; list = list->next) {
+	for (list = priv->request_list; list; list = list->next) {
 		code = (uint8_t) GPOINTER_TO_INT(list->data);
-
 		packet->options[end + OPT_DATA + len] = code;
 		len++;
 	}
@@ -704,11 +705,10 @@ static void add_binary_option(gpointer key, gpointer value, gpointer user_data)
 	dhcp_add_binary_option(packet, option);
 }
 
-static void add_send_options(GDHCPClient *dhcp_client,
-				struct dhcp_packet *packet)
+static void add_send_options(GDHCPClient *dhcp_client, struct dhcp_packet *packet)
 {
-	g_hash_table_foreach(dhcp_client->send_value_hash,
-				add_binary_option, packet);
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
+	g_hash_table_foreach(priv->send_value_hash, add_binary_option, packet);
 }
 
 /*
@@ -719,18 +719,20 @@ static void add_send_options(GDHCPClient *dhcp_client,
  */
 static uint16_t dhcp_attempt_secs(GDHCPClient *dhcp_client)
 {
-	return htons(MIN(time(NULL) - dhcp_client->start, UINT16_MAX));
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
+	return htons(MIN(time(NULL) - priv->start, UINT16_MAX));
 }
 
 static int send_discover(GDHCPClient *dhcp_client, uint32_t requested)
 {
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
 	struct dhcp_packet packet;
 
 	debug(dhcp_client, "sending DHCP discover request");
 
 	init_packet(dhcp_client, &packet, DHCPDISCOVER);
 
-	packet.xid = dhcp_client->xid;
+	packet.xid = priv->xid;
 	packet.secs = dhcp_attempt_secs(dhcp_client);
 
 	if (requested)
@@ -754,29 +756,27 @@ static int send_discover(GDHCPClient *dhcp_client, uint32_t requested)
 	 */
 	return dhcp_send_raw_packet(&packet, INADDR_ANY, CLIENT_PORT,
 				INADDR_BROADCAST, SERVER_PORT,
-				MAC_BCAST_ADDR, dhcp_client->ifindex,
-				dhcp_client->retry_times % 2);
+				MAC_BCAST_ADDR, priv->ifindex,
+				priv->retry_times % 2);
 }
 
 static int send_request(GDHCPClient *dhcp_client)
 {
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
 	struct dhcp_packet packet;
 
-	debug(dhcp_client, "sending DHCP request (state %d)",
-		dhcp_client->state);
+	debug(dhcp_client, "sending DHCP request (state %d)", priv->state);
 
 	init_packet(dhcp_client, &packet, DHCPREQUEST);
 
-	packet.xid = dhcp_client->xid;
+	packet.xid = priv->xid;
 	packet.secs = dhcp_attempt_secs(dhcp_client);
 
-	if (dhcp_client->state == REQUESTING || dhcp_client->state == REBOOTING)
-		dhcp_add_option_uint32(&packet, DHCP_REQUESTED_IP,
-				dhcp_client->requested_ip);
+	if (priv->state == REQUESTING || priv->state == REBOOTING)
+		dhcp_add_option_uint32(&packet, DHCP_REQUESTED_IP, priv->requested_ip);
 
-	if (dhcp_client->state == REQUESTING)
-		dhcp_add_option_uint32(&packet, DHCP_SERVER_ID,
-				dhcp_client->server_ip);
+	if (priv->state == REQUESTING)
+		dhcp_add_option_uint32(&packet, DHCP_SERVER_ID, priv->server_ip);
 
 	dhcp_add_option_uint16(&packet, DHCP_MAX_SIZE, 576);
 
@@ -784,22 +784,21 @@ static int send_request(GDHCPClient *dhcp_client)
 
 	add_send_options(dhcp_client, &packet);
 
-	if (dhcp_client->state == RENEWING || dhcp_client->state == REBINDING)
-		packet.ciaddr = htonl(dhcp_client->requested_ip);
+	if (priv->state == RENEWING || priv->state == REBINDING)
+		packet.ciaddr = htonl(priv->requested_ip);
 
-	if (dhcp_client->state == RENEWING)
+	if (priv->state == RENEWING)
 		return dhcp_send_kernel_packet(&packet,
-				dhcp_client->requested_ip, CLIENT_PORT,
-				dhcp_client->server_ip, SERVER_PORT);
+				priv->requested_ip, CLIENT_PORT,
+				priv->server_ip, SERVER_PORT);
 
 	return dhcp_send_raw_packet(&packet, INADDR_ANY, CLIENT_PORT,
 				INADDR_BROADCAST, SERVER_PORT,
-				MAC_BCAST_ADDR, dhcp_client->ifindex,
-				dhcp_client->request_bcast);
+				MAC_BCAST_ADDR, priv->ifindex,
+				priv->request_bcast);
 }
 
-static int send_release(GDHCPClient *dhcp_client,
-			uint32_t server, uint32_t ciaddr)
+static int send_release(GDHCPClient *dhcp_client, uint32_t server, uint32_t ciaddr)
 {
 	struct dhcp_packet packet;
 	uint64_t rand;
@@ -2276,8 +2275,7 @@ static GList *get_addresses(GDHCPClient *dhcp_client,
 			st = get_uint16(&option[0]);
 			debug(dhcp_client, "error code %d", st);
 			if (option_len > 2) {
-				str = g_strndup((gchar *)&option[2],
-						option_len - 2);
+				str = g_strndup((gchar *)&option[2], option_len - 2);
 				debug(dhcp_client, "error text: %s", str);
 				g_free(str);
 			}
@@ -2297,8 +2295,7 @@ static GList *get_addresses(GDHCPClient *dhcp_client,
 			i += sizeof(addr);
 			if (preferred < valid) {
 				/* RFC 3633, ch 10 */
-				list = add_prefix(dhcp_client, list, &addr,
-						prefixlen, preferred, valid);
+				list = add_prefix(dhcp_client, list, &addr, prefixlen, preferred, valid);
 				if (shortest_valid > valid)
 					shortest_valid = valid;
 				prefix_count++;
@@ -2328,11 +2325,9 @@ static GList *get_addresses(GDHCPClient *dhcp_client,
 		list = g_list_append(list, g_strdup(addr_str));
 
 		if (code == G_DHCPV6_IA_NA)
-			memcpy(&dhcp_client->ia_na, &addr,
-						sizeof(struct in6_addr));
+			memcpy(&dhcp_client->ia_na, &addr, sizeof(struct in6_addr));
 		else
-			memcpy(&dhcp_client->ia_ta, &addr,
-						sizeof(struct in6_addr));
+			memcpy(&dhcp_client->ia_ta, &addr, sizeof(struct in6_addr));
 
 		if (valid != dhcp_client->expire)
 			dhcp_client->expire = valid;
@@ -2344,8 +2339,7 @@ static GList *get_addresses(GDHCPClient *dhcp_client,
 		 */
 		list = g_list_reverse(list);
 
-		debug(dhcp_client, "prefix count %d T1 %u T2 %u",
-			prefix_count, T1, T2);
+		debug(dhcp_client, "prefix count %d T1 %u T2 %u", prefix_count, T1, T2);
 
 		dhcp_client->T1 = T1;
 		dhcp_client->T2 = T2;
@@ -2360,7 +2354,6 @@ static GList *get_addresses(GDHCPClient *dhcp_client,
 }
 
 static GList *get_domains(int maxlen, unsigned char *value)
-
 {
 	GList *list = NULL;
 	int pos = 0;
@@ -2868,8 +2861,9 @@ static gboolean listener_event(GIOChannel *channel, GIOCondition condition,
 static gboolean discover_timeout(gpointer user_data)
 {
 	GDHCPClient *dhcp_client = user_data;
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
 
-	dhcp_client->retry_times++;
+	priv->retry_times++;
 
 	/*
 	 * We do not send the REQUESTED IP option if we are retrying because
@@ -2884,9 +2878,12 @@ static gboolean discover_timeout(gpointer user_data)
 static gboolean reboot_timeout(gpointer user_data)
 {
 	GDHCPClient *dhcp_client = user_data;
-	dhcp_client->retry_times = 0;
-	dhcp_client->requested_ip = 0;
-	dhcp_client->state = INIT_SELECTING;
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
+
+	priv->retry_times = 0;
+	priv->requested_ip = 0;
+	priv->state = INIT_SELECTING;
+
 	/*
 	 * We do not send the REQUESTED IP option because the server didn't
 	 * respond when we send DHCPREQUEST with the REQUESTED IP option in
@@ -2968,89 +2965,90 @@ static gboolean ipv4ll_probe_timeout(gpointer user_data)
 
 int g_dhcp_client_start(GDHCPClient *dhcp_client, const char *last_address)
 {
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
 	int re;
 	uint32_t addr;
 	uint64_t rand;
 
 	remove_timeouts(dhcp_client);
 
-	if (dhcp_client->type == G_DHCP_IPV6) {
+	if (priv->type == G_DHCP_IPV6) {
 		if (g_signal_has_handler_pending (dhcp_client, signals[SIG_INFORMATION_REQ], 0, FALSE)) {
-			dhcp_client->state = INFORMATION_REQ;
+			priv->state = INFORMATION_REQ;
 			re = switch_listening_mode(dhcp_client, L3);
 			if (re != 0) {
 				switch_listening_mode(dhcp_client, L_NONE);
-				dhcp_client->state = 0;
+				priv->state = 0;
 				return re;
 			}
 			send_information_req(dhcp_client);
 
 		} else if (g_signal_has_handler_pending (dhcp_client, signals[SIG_SOLICITATION], 0, FALSE)) {
-			dhcp_client->state = SOLICITATION;
+			priv->state = SOLICITATION;
 			re = switch_listening_mode(dhcp_client, L3);
 			if (re != 0) {
 				switch_listening_mode(dhcp_client, L_NONE);
-				dhcp_client->state = 0;
+				priv->state = 0;
 				return re;
 			}
 			send_solicitation(dhcp_client);
 
 		} else if (g_signal_has_handler_pending (dhcp_client, signals[SIG_REQUEST], 0, FALSE)) {
-			dhcp_client->state = REQUEST;
+			priv->state = REQUEST;
 			re = switch_listening_mode(dhcp_client, L3);
 			if (re != 0) {
 				switch_listening_mode(dhcp_client, L_NONE);
-				dhcp_client->state = 0;
+				priv->state = 0;
 				return re;
 			}
 			send_dhcpv6_request(dhcp_client);
 
 		} else if (g_signal_has_handler_pending (dhcp_client, signals[SIG_CONFIRM], 0, FALSE)) {
-			dhcp_client->state = CONFIRM;
+			priv->state = CONFIRM;
 			re = switch_listening_mode(dhcp_client, L3);
 			if (re != 0) {
 				switch_listening_mode(dhcp_client, L_NONE);
-				dhcp_client->state = 0;
+				priv->state = 0;
 				return re;
 			}
 			send_dhcpv6_confirm(dhcp_client);
 
 		} else if (g_signal_has_handler_pending (dhcp_client, signals[SIG_RENEW], 0, FALSE)) {
-			dhcp_client->state = RENEW;
+			priv->state = RENEW;
 			re = switch_listening_mode(dhcp_client, L3);
 			if (re != 0) {
 				switch_listening_mode(dhcp_client, L_NONE);
-				dhcp_client->state = 0;
+				priv->state = 0;
 				return re;
 			}
 			send_dhcpv6_renew(dhcp_client);
 
 		} else if (g_signal_has_handler_pending (dhcp_client, signals[SIG_REBIND], 0, FALSE)) {
-			dhcp_client->state = REBIND;
+			priv->state = REBIND;
 			re = switch_listening_mode(dhcp_client, L3);
 			if (re != 0) {
 				switch_listening_mode(dhcp_client, L_NONE);
-				dhcp_client->state = 0;
+				priv->state = 0;
 				return re;
 			}
 			send_dhcpv6_rebind(dhcp_client);
 
 		} else if (g_signal_has_handler_pending (dhcp_client, signals[SIG_RELEASE], 0, FALSE)) {
-			dhcp_client->state = RENEW;
+			priv->state = RENEW;
 			re = switch_listening_mode(dhcp_client, L3);
 			if (re != 0) {
 				switch_listening_mode(dhcp_client, L_NONE);
-				dhcp_client->state = 0;
+				priv->state = 0;
 				return re;
 			}
 			send_dhcpv6_release(dhcp_client);
 
 		} else if (g_signal_has_handler_pending (dhcp_client, signals[SIG_DECLINE], 0, FALSE)) {
-			dhcp_client->state = DECLINE;
+			priv->state = DECLINE;
 			re = switch_listening_mode(dhcp_client, L3);
 			if (re != 0) {
 				switch_listening_mode(dhcp_client, L_NONE);
-				dhcp_client->state = 0;
+				priv->state = 0;
 				return re;
 			}
 			send_dhcpv6_decline(dhcp_client);
@@ -3058,153 +3056,156 @@ int g_dhcp_client_start(GDHCPClient *dhcp_client, const char *last_address)
 
 		return 0;
 	}
-	else if (dhcp_client->type == G_DHCP_IPV4LL) {
-		dhcp_client->state = INIT_SELECTING;
+	else if (priv->type == G_DHCP_IPV4LL) {
+		priv->state = INIT_SELECTING;
 		ipv4ll_start(dhcp_client);
 		return 0;
 	}
 	else {
-		if (dhcp_client->retry_times == DISCOVER_RETRIES) {
+		if (priv->retry_times == DISCOVER_RETRIES) {
 			g_signal_emit (dhcp_client, signals[SIG_NO_LEASE], 0);
-			dhcp_client->retry_times = 0;
+			priv->retry_times = 0;
 			return 0;
 		}
 
-		if (dhcp_client->retry_times == 0) {
-			g_free(dhcp_client->assigned_ip);
-			dhcp_client->assigned_ip = NULL;
+		if (priv->retry_times == 0) {
+			g_free(priv->assigned_ip);
+			priv->assigned_ip = NULL;
 
-			dhcp_client->state = INIT_SELECTING;
+			priv->state = INIT_SELECTING;
 			re = switch_listening_mode(dhcp_client, L2);
 			if (re != 0)
 				return re;
 
 			dhcp_get_random(&rand);
-			dhcp_client->xid = rand;
-			dhcp_client->start = time(NULL);
+			priv->xid = rand;
+			priv->start = time(NULL);
 		}
 
 		if (!last_address) {
 			addr = 0;
 		} else {
 			addr = ntohl(inet_addr(last_address));
-			if (addr == 0xFFFFFFFF || ((addr & LINKLOCAL_ADDR) ==
-						LINKLOCAL_ADDR)) {
+			if (addr == 0xFFFFFFFF || ((addr & LINKLOCAL_ADDR) == LINKLOCAL_ADDR)) {
 				addr = 0;
-			} else if (dhcp_client->last_address != last_address) {
-				g_free(dhcp_client->last_address);
-				dhcp_client->last_address = g_strdup(last_address);
+			} else if (priv->last_address != last_address) {
+				g_free(priv->last_address);
+				priv->last_address = g_strdup(last_address);
 			}
 		}
 
-		if ((addr != 0) && (dhcp_client->type != G_DHCP_IPV4LL)) {
+		if (addr != 0) {
 			debug(dhcp_client, "DHCP client start with state init_reboot");
-			dhcp_client->requested_ip = addr;
-			dhcp_client->state = REBOOTING;
+			priv->requested_ip = addr;
+			priv->state = REBOOTING;
 			send_request(dhcp_client);
-
-			dhcp_client->timeout = g_timeout_add_seconds_full(
+			priv->timeout = g_timeout_add_seconds_full(
 									G_PRIORITY_HIGH,
 									REQUEST_TIMEOUT,
 									reboot_timeout,
 									dhcp_client,
 									NULL);
 			return 0;
+		} else {
+			send_discover(dhcp_client, addr);
+			priv->timeout = g_timeout_add_seconds_full(G_PRIORITY_HIGH,
+									DISCOVER_TIMEOUT,
+									discover_timeout,
+									dhcp_client,
+									NULL);
+			return 0;
 		}
-		send_discover(dhcp_client, addr);
-
-		dhcp_client->timeout = g_timeout_add_seconds_full(G_PRIORITY_HIGH,
-								DISCOVER_TIMEOUT,
-								discover_timeout,
-								dhcp_client,
-								NULL);
-		return 0;
 	}
 }
 
 void g_dhcp_client_stop(GDHCPClient *dhcp_client)
 {
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
+
 	switch_listening_mode(dhcp_client, L_NONE);
 
-	if (dhcp_client->state == BOUND ||
-			dhcp_client->state == RENEWING ||
-				dhcp_client->state == REBINDING)
-		send_release(dhcp_client, dhcp_client->server_ip,
-					dhcp_client->requested_ip);
+	if (priv->state == BOUND ||
+			priv->state == RENEWING ||
+				priv->state == REBINDING) {
+		send_release(dhcp_client, priv->server_ip, priv->requested_ip);
+	}
 
 	remove_timeouts(dhcp_client);
 
-	if (dhcp_client->listener_watch > 0) {
-		g_source_remove(dhcp_client->listener_watch);
-		dhcp_client->listener_watch = 0;
+	if (priv->listener_watch > 0) {
+		g_source_remove(priv->listener_watch);
+		priv->listener_watch = 0;
 	}
 
-	dhcp_client->retry_times = 0;
-	dhcp_client->ack_retry_times = 0;
+	priv->retry_times = 0;
+	priv->ack_retry_times = 0;
 
-	dhcp_client->requested_ip = 0;
-	dhcp_client->state = RELEASED;
-	dhcp_client->lease_seconds = 0;
-	dhcp_client->request_bcast = false;
+	priv->requested_ip = 0;
+	priv->state = RELEASED;
+	priv->lease_seconds = 0;
+	priv->request_bcast = false;
 }
 
 GList *g_dhcp_client_get_option(GDHCPClient *dhcp_client,
 					unsigned char option_code)
 {
-	return g_hash_table_lookup(dhcp_client->code_value_hash,
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
+
+	return g_hash_table_lookup(priv->code_value_hash,
 					GINT_TO_POINTER((int) option_code));
 }
 
 int g_dhcp_client_get_index(GDHCPClient *dhcp_client)
 {
-	return dhcp_client->ifindex;
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
+	return priv->ifindex;
 }
 
 char *g_dhcp_client_get_server_address(GDHCPClient *dhcp_client)
 {
-	if (!dhcp_client)
-		return NULL;
-
-	return get_ip(dhcp_client->server_ip);
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
+	return get_ip(priv->server_ip);
 }
 
 char *g_dhcp_client_get_address(GDHCPClient *dhcp_client)
 {
-	return g_strdup(dhcp_client->assigned_ip);
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
+	return g_strdup(priv->assigned_ip);
 }
 
 char *g_dhcp_client_get_netmask(GDHCPClient *dhcp_client)
 {
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
 	GList *option = NULL;
 
-	if (dhcp_client->type == G_DHCP_IPV6)
+	if (priv->type == G_DHCP_IPV6)
 		return NULL;
 
-	switch (dhcp_client->state) {
-	case IPV4LL_DEFEND:
-	case IPV4LL_MONITOR:
-		return g_strdup("255.255.0.0");
-	case BOUND:
-	case RENEWING:
-	case REBINDING:
-		option = g_dhcp_client_get_option(dhcp_client, G_DHCP_SUBNET);
-		if (option)
-			return g_strdup(option->data);
-	case INIT_SELECTING:
-	case REBOOTING:
-	case REQUESTING:
-	case RELEASED:
-	case IPV4LL_PROBE:
-	case IPV4LL_ANNOUNCE:
-	case INFORMATION_REQ:
-	case SOLICITATION:
-	case REQUEST:
-	case CONFIRM:
-	case RENEW:
-	case REBIND:
-	case RELEASE:
-	case DECLINE:
-		break;
+	switch (priv->state) {
+		case IPV4LL_DEFEND:
+		case IPV4LL_MONITOR:
+			return g_strdup("255.255.0.0");
+		case BOUND:
+		case RENEWING:
+		case REBINDING:
+			option = g_dhcp_client_get_option(dhcp_client, G_DHCP_SUBNET);
+			if (option)
+				return g_strdup(option->data);
+		case INIT_SELECTING:
+		case REBOOTING:
+		case REQUESTING:
+		case RELEASED:
+		case IPV4LL_PROBE:
+		case IPV4LL_ANNOUNCE:
+		case INFORMATION_REQ:
+		case SOLICITATION:
+		case REQUEST:
+		case CONFIRM:
+		case RENEW:
+		case REBIND:
+		case RELEASE:
+		case DECLINE:
+			break;
 	}
 	return NULL;
 }
