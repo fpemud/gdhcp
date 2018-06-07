@@ -514,8 +514,7 @@ static void add_dhcpv6_send_options(GDHCPClient *dhcp_client,
 	*ptr_buf = *params.ptr_buf;
 }
 
-static void copy_option(uint8_t *buf, uint16_t code, uint16_t len,
-			uint8_t *msg)
+static void copy_option(uint8_t *buf, uint16_t code, uint16_t len, uint8_t *msg)
 {
 	buf[0] = code >> 8;
 	buf[1] = code & 0xff;
@@ -540,19 +539,21 @@ static int32_t get_time_diff(struct timeval *tv)
 
 static void remove_timeouts(GDHCPClient *dhcp_client)
 {
-	if (dhcp_client->timeout > 0)
-		g_source_remove(dhcp_client->timeout);
-	if (dhcp_client->t1_timeout > 0)
-		g_source_remove(dhcp_client->t1_timeout);
-	if (dhcp_client->t2_timeout > 0)
-		g_source_remove(dhcp_client->t2_timeout);
-	if (dhcp_client->lease_timeout > 0)
-		g_source_remove(dhcp_client->lease_timeout);
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
 
-	dhcp_client->timeout = 0;
-	dhcp_client->t1_timeout = 0;
-	dhcp_client->t2_timeout = 0;
-	dhcp_client->lease_timeout = 0;
+	if (priv->timeout > 0)
+		g_source_remove(priv->timeout);
+	if (priv->t1_timeout > 0)
+		g_source_remove(priv->t1_timeout);
+	if (priv->t2_timeout > 0)
+		g_source_remove(priv->t2_timeout);
+	if (priv->lease_timeout > 0)
+		g_source_remove(priv->lease_timeout);
+
+	priv->timeout = 0;
+	priv->t1_timeout = 0;
+	priv->t2_timeout = 0;
+	priv->lease_timeout = 0;
 }
 
 static void add_dhcpv6_request_options(GDHCPClient *dhcp_client,
@@ -790,75 +791,73 @@ static int send_release(GDHCPClient *dhcp_client,
 						server, SERVER_PORT);
 }
 
-static gboolean ipv4ll_probe_timeout(gpointer dhcp_data);
-static int switch_listening_mode(GDHCPClient *dhcp_client,
-					ListenMode listen_mode);
+static int switch_listening_mode(GDHCPClient *dhcp_client, ListenMode listen_mode);
+static gboolean ipv4ll_probe_timeout(gpointer user_data);
+static gboolean ipv4ll_announce_timeout(gpointer user_data);
+static gboolean ipv4ll_defend_timeout(gpointer user_data);
 
-static gboolean send_probe_packet(gpointer dhcp_data)
+static void send_probe_packet(GDHCPClient *dhcp_client)
 {
-	GDHCPClient *dhcp_client = dhcp_data;
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
 	guint timeout;
 
 	/* if requested_ip is not valid, pick a new address */
-	if (dhcp_client->requested_ip == 0) {
+	if (priv->requested_ip == 0) {
 		debug(dhcp_client, "pick a new random address");
-		dhcp_client->requested_ip = ipv4ll_random_ip();
+		priv->requested_ip = ipv4ll_random_ip();
 	}
 
 	debug(dhcp_client, "sending IPV4LL probe request");
 
-	if (dhcp_client->retry_times == 1) {
-		dhcp_client->state = IPV4LL_PROBE;
+	if (priv->retry_times == 1) {
+		priv->state = IPV4LL_PROBE;
 		switch_listening_mode(dhcp_client, L_ARP);
 	}
-	ipv4ll_send_arp_packet(dhcp_client->mac_address, 0,
-			dhcp_client->requested_ip, dhcp_client->ifindex);
 
-	if (dhcp_client->retry_times < PROBE_NUM) {
+	ipv4ll_send_arp_packet(priv->mac_address,
+				0,
+				priv->requested_ip,
+				priv->ifindex);
+
+	if (priv->retry_times < PROBE_NUM) {
 		/* add a random timeout in range of PROBE_MIN to PROBE_MAX */
 		timeout = ipv4ll_random_delay_ms(PROBE_MAX - PROBE_MIN);
 		timeout += PROBE_MIN * 1000;
 	} else
 		timeout = (ANNOUNCE_WAIT * 1000);
 
-	dhcp_client->timeout = g_timeout_add_full(G_PRIORITY_HIGH,
+	priv->timeout = g_timeout_add_full(G_PRIORITY_HIGH,
 						 timeout,
 						 ipv4ll_probe_timeout,
 						 dhcp_client,
 						 NULL);
-	return FALSE;
 }
 
-static gboolean ipv4ll_announce_timeout(gpointer user_data);
-static gboolean ipv4ll_defend_timeout(gpointer dhcp_data);
-
-static gboolean send_announce_packet(GDHCPClient *dhcp_client)
+static void send_announce_packet(GDHCPClient *dhcp_client)
 {
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
+
 	debug(dhcp_client, "sending IPV4LL announce request");
 
-	ipv4ll_send_arp_packet(dhcp_client->mac_address,
-				dhcp_client->requested_ip,
-				dhcp_client->requested_ip,
-				dhcp_client->ifindex);
+	ipv4ll_send_arp_packet(priv->mac_address,
+				priv->requested_ip,
+				priv->requested_ip,
+				priv->ifindex);
 
 	remove_timeouts(dhcp_client);
 
-	if (dhcp_client->state == IPV4LL_DEFEND) {
-		dhcp_client->timeout =
-			g_timeout_add_seconds_full(G_PRIORITY_HIGH,
-						DEFEND_INTERVAL,
-						ipv4ll_defend_timeout,
-						dhcp_client,
-						NULL);
-		return TRUE;
-	} else
-		dhcp_client->timeout =
-			g_timeout_add_seconds_full(G_PRIORITY_HIGH,
-						ANNOUNCE_INTERVAL,
-						ipv4ll_announce_timeout,
-						dhcp_client,
-						NULL);
-	return TRUE;
+	if (priv->state == IPV4LL_DEFEND)
+		priv->timeout = g_timeout_add_seconds_full(G_PRIORITY_HIGH,
+							DEFEND_INTERVAL,
+							ipv4ll_defend_timeout,
+							dhcp_client,
+							NULL);
+	else
+		priv->timeout = g_timeout_add_seconds_full(G_PRIORITY_HIGH,
+							ANNOUNCE_INTERVAL,
+							ipv4ll_announce_timeout,
+							dhcp_client,
+							NULL);
 }
 
 static void get_interface_mac_address(int index, uint8_t *mac_address)
@@ -1572,48 +1571,52 @@ static int dhcp_recv_l2_packet(struct dhcp_packet *dhcp_pkt, int fd,
 
 static void ipv4ll_start(GDHCPClient *dhcp_client)
 {
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
 	guint timeout;
 
 	remove_timeouts(dhcp_client);
 
 	switch_listening_mode(dhcp_client, L_NONE);
-	dhcp_client->retry_times = 0;
-	dhcp_client->requested_ip = 0;
+	priv->retry_times = 0;
+	priv->requested_ip = 0;
 
-	dhcp_client->requested_ip = ipv4ll_random_ip();
+	priv->requested_ip = ipv4ll_random_ip();
 
-	/*first wait a random delay to avoid storm of arp request on boot*/
+	/* first wait a random delay to avoid storm of arp request on boot */
 	timeout = ipv4ll_random_delay_ms(PROBE_WAIT);
 
-	dhcp_client->retry_times++;
-	dhcp_client->timeout = g_timeout_add_full(G_PRIORITY_HIGH,
+	priv->retry_times++;
+	priv->timeout = g_timeout_add_full(G_PRIORITY_HIGH,
 						timeout,
-						send_probe_packet,
+						ipv4ll_first_probe_timeout,
 						dhcp_client,
 						NULL);
 }
 
 static void ipv4ll_stop(GDHCPClient *dhcp_client)
 {
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
+
 	switch_listening_mode(dhcp_client, L_NONE);
 
 	remove_timeouts(dhcp_client);
 
-	if (dhcp_client->listener_watch > 0) {
-		g_source_remove(dhcp_client->listener_watch);
-		dhcp_client->listener_watch = 0;
+	if (priv->listener_watch > 0) {
+		g_source_remove(priv->listener_watch);
+		priv->listener_watch = 0;
 	}
 
-	dhcp_client->state = IPV4LL_PROBE;
-	dhcp_client->retry_times = 0;
-	dhcp_client->requested_ip = 0;
+	priv->state = IPV4LL_PROBE;
+	priv->retry_times = 0;
+	priv->requested_ip = 0;
 
-	g_free(dhcp_client->assigned_ip);
-	dhcp_client->assigned_ip = NULL;
+	g_free(priv->assigned_ip);
+	priv->assigned_ip = NULL;
 }
 
 static int ipv4ll_recv_arp_packet(GDHCPClient *dhcp_client)
 {
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
 	int bytes;
 	struct ether_arp arp;
 	uint32_t ip_requested;
@@ -1621,7 +1624,7 @@ static int ipv4ll_recv_arp_packet(GDHCPClient *dhcp_client)
 	int target_conflict;
 
 	memset(&arp, 0, sizeof(arp));
-	bytes = read(dhcp_client->listener_sockfd, &arp, sizeof(arp));
+	bytes = read(priv->listener_sockfd, &arp, sizeof(arp));
 	if (bytes < 0)
 		return bytes;
 
@@ -1629,10 +1632,10 @@ static int ipv4ll_recv_arp_packet(GDHCPClient *dhcp_client)
 			arp.arp_op != htons(ARPOP_REQUEST))
 		return -EINVAL;
 
-	if (memcmp(arp.arp_sha, dhcp_client->mac_address, ETH_ALEN) == 0)
+	if (memcmp(arp.arp_sha, priv->mac_address, ETH_ALEN) == 0)
 		return 0;
 
-	ip_requested = htonl(dhcp_client->requested_ip);
+	ip_requested = htonl(priv->requested_ip);
 	source_conflict = !memcmp(arp.arp_spa, &ip_requested,
 						sizeof(ip_requested));
 
@@ -1642,22 +1645,22 @@ static int ipv4ll_recv_arp_packet(GDHCPClient *dhcp_client)
 	if (!source_conflict && !target_conflict)
 		return 0;
 
-	dhcp_client->conflicts++;
+	priv->conflicts++;
 
 	debug(dhcp_client, "IPV4LL conflict detected");
 
-	if (dhcp_client->state == IPV4LL_MONITOR) {
+	if (priv->state == IPV4LL_MONITOR) {
 		if (!source_conflict)
 			return 0;
-		dhcp_client->state = IPV4LL_DEFEND;
+		priv->state = IPV4LL_DEFEND;
 		debug(dhcp_client, "DEFEND mode conflicts : %d",
-			dhcp_client->conflicts);
+			priv->conflicts);
 		/* Try to defend with a single announce */
 		send_announce_packet(dhcp_client);
 		return 0;
 	}
 
-	if (dhcp_client->state == IPV4LL_DEFEND) {
+	if (priv->state == IPV4LL_DEFEND) {
 		if (!source_conflict)
 			return 0;
 		else
@@ -1666,15 +1669,14 @@ static int ipv4ll_recv_arp_packet(GDHCPClient *dhcp_client)
 
 	ipv4ll_stop(dhcp_client);
 
-	if (dhcp_client->conflicts < MAX_CONFLICTS) {
-		/*restart whole state machine*/
-		dhcp_client->retry_times++;
-		dhcp_client->timeout =
-			g_timeout_add_full(G_PRIORITY_HIGH,
-					ipv4ll_random_delay_ms(PROBE_WAIT),
-					send_probe_packet,
-					dhcp_client,
-					NULL);
+	if (priv->conflicts < MAX_CONFLICTS) {
+		/* restart whole state machine */
+		priv->retry_times++;
+		priv->timeout = g_timeout_add_full(G_PRIORITY_HIGH,
+							ipv4ll_random_delay_ms(PROBE_WAIT),
+							ipv4ll_first_probe_timeout,
+							dhcp_client,
+							NULL);
 	} else {
 		/* Here we got a lot of conflicts, RFC3927 states that we have
 		* to wait RATE_LIMIT_INTERVAL before retrying,
@@ -1736,42 +1738,37 @@ static gboolean request_timeout(gpointer user_data)
 static gboolean listener_event(GIOChannel *channel, GIOCondition condition,
 							gpointer user_data);
 
-static int switch_listening_mode(GDHCPClient *dhcp_client,
-					ListenMode listen_mode)
+static int switch_listening_mode(GDHCPClient *dhcp_client, ListenMode listen_mode)
 {
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private (self);
 	GIOChannel *listener_channel;
 	int listener_sockfd;
 
-	if (dhcp_client->listen_mode == listen_mode)
+	if (priv->listen_mode == listen_mode)
 		return 0;
 
-	debug(dhcp_client, "switch listening mode (%d ==> %d)",
-				dhcp_client->listen_mode, listen_mode);
+	debug(dhcp_client, "switch listening mode (%d ==> %d)", priv->listen_mode, listen_mode);
 
-	if (dhcp_client->listen_mode != L_NONE) {
-		if (dhcp_client->listener_watch > 0)
-			g_source_remove(dhcp_client->listener_watch);
-		dhcp_client->listen_mode = L_NONE;
-		dhcp_client->listener_sockfd = -1;
-		dhcp_client->listener_watch = 0;
+	if (priv->listen_mode != L_NONE) {
+		if (priv->listener_watch > 0)
+			g_source_remove(priv->listener_watch);
+		priv->listen_mode = L_NONE;
+		priv->listener_sockfd = -1;
+		priv->listener_watch = 0;
 	}
 
 	if (listen_mode == L_NONE)
 		return 0;
 
 	if (listen_mode == L2)
-		listener_sockfd = dhcp_l2_socket(dhcp_client->ifindex);
+		listener_sockfd = dhcp_l2_socket(priv->ifindex);
 	else if (listen_mode == L3) {
-		if (dhcp_client->type == G_DHCP_IPV6)
-			listener_sockfd = dhcp_l3_socket(DHCPV6_CLIENT_PORT,
-							dhcp_client->interface,
-							AF_INET6);
+		if (priv->type == G_DHCP_IPV6)
+			listener_sockfd = dhcp_l3_socket(DHCPV6_CLIENT_PORT, priv->interface, AF_INET6);
 		else
-			listener_sockfd = dhcp_l3_socket(CLIENT_PORT,
-							dhcp_client->interface,
-							AF_INET);
+			listener_sockfd = dhcp_l3_socket(CLIENT_PORT, priv->interface, AF_INET);
 	} else if (listen_mode == L_ARP)
-		listener_sockfd = ipv4ll_arp_socket(dhcp_client->ifindex);
+		listener_sockfd = ipv4ll_arp_socket(priv->ifindex);
 	else
 		return -EIO;
 
@@ -1785,15 +1782,13 @@ static int switch_listening_mode(GDHCPClient *dhcp_client,
 		return -EIO;
 	}
 
-	dhcp_client->listen_mode = listen_mode;
-	dhcp_client->listener_sockfd = listener_sockfd;
+	priv->listen_mode = listen_mode;
+	priv->listener_sockfd = listener_sockfd;
 
 	g_io_channel_set_close_on_unref(listener_channel, TRUE);
-	dhcp_client->listener_watch =
-			g_io_add_watch_full(listener_channel, G_PRIORITY_HIGH,
-				G_IO_IN | G_IO_NVAL | G_IO_ERR | G_IO_HUP,
-						listener_event, dhcp_client,
-								NULL);
+	priv->listener_watch = g_io_add_watch_full(listener_channel, G_PRIORITY_HIGH,
+								G_IO_IN | G_IO_NVAL | G_IO_ERR | G_IO_HUP,
+								listener_event, dhcp_client, NULL);
 	g_io_channel_unref(listener_channel);
 
 	return 0;
@@ -2840,14 +2835,15 @@ static gboolean reboot_timeout(gpointer user_data)
 	return FALSE;
 }
 
-static gboolean ipv4ll_defend_timeout(gpointer dhcp_data)
+static gboolean ipv4ll_defend_timeout(gpointer user_data)
 {
-	GDHCPClient *dhcp_client = dhcp_data;
+	GDHCPClient *dhcp_client = user_datas;
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
 
 	debug(dhcp_client, "back to MONITOR mode");
 
-	dhcp_client->conflicts = 0;
-	dhcp_client->state = IPV4LL_MONITOR;
+	priv->conflicts = 0;
+	priv->state = IPV4LL_MONITOR;
 
 	return FALSE;
 }
@@ -2855,46 +2851,54 @@ static gboolean ipv4ll_defend_timeout(gpointer dhcp_data)
 static gboolean ipv4ll_announce_timeout(gpointer user_data)
 {
 	GDHCPClient *dhcp_client = user_data;
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
 	uint32_t ip;
 
-	debug(dhcp_client, "request timeout (retries %d)",
-	       dhcp_client->retry_times);
+	debug(dhcp_client, "request timeout (retries %d)", priv->retry_times);
 
-	if (dhcp_client->retry_times != ANNOUNCE_NUM) {
-		dhcp_client->retry_times++;
+	if (priv->retry_times != ANNOUNCE_NUM) {
+		priv->retry_times++;
 		send_announce_packet(dhcp_client);
 		return FALSE;
 	}
 
-	ip = htonl(dhcp_client->requested_ip);
+	ip = htonl(priv->requested_ip);
 	debug(dhcp_client, "switching to monitor mode");
-	dhcp_client->state = IPV4LL_MONITOR;
-	dhcp_client->assigned_ip = get_ip(ip);
+	priv->state = IPV4LL_MONITOR;
+	priv->assigned_ip = get_ip(ip);
 
 	g_signal_emit (dhcp_client, signals[SIG_IPV4LL_AVAILABLE], 0);
-	dhcp_client->conflicts = 0;
-	dhcp_client->timeout = 0;
+	priv->conflicts = 0;
+	priv->timeout = 0;
 
 	return FALSE;
 }
 
-static gboolean ipv4ll_probe_timeout(gpointer dhcp_data)
+static gboolean ipv4ll_first_probe_timeout(gpointer user_data)
 {
+	GDHCPClient *dhcp_client = user_data;
 
-	GDHCPClient *dhcp_client = dhcp_data;
+	send_probe_packet(dhcp_client);
 
-	debug(dhcp_client, "IPV4LL probe timeout (retries %d)",
-	       dhcp_client->retry_times);
+	return FALSE;
+}
 
-	if (dhcp_client->retry_times == PROBE_NUM) {
-		dhcp_client->state = IPV4LL_ANNOUNCE;
-		dhcp_client->retry_times = 0;
+static gboolean ipv4ll_probe_timeout(gpointer user_data)
+{
+	GDHCPClient *dhcp_client = user_data;
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
 
-		dhcp_client->retry_times++;
+	debug(dhcp_client, "IPV4LL probe timeout (retries %d)", priv->retry_times);
+
+	if (priv->retry_times == PROBE_NUM) {
+		priv->state = IPV4LL_ANNOUNCE;
+		priv->retry_times = 0;
+
+		priv->retry_times++;
 		send_announce_packet(dhcp_client);
 		return FALSE;
 	}
-	dhcp_client->retry_times++;
+	priv->retry_times++;
 	send_probe_packet(dhcp_client);
 
 	return FALSE;
@@ -2992,68 +2996,68 @@ int g_dhcp_client_start(GDHCPClient *dhcp_client, const char *last_address)
 
 		return 0;
 	}
-
-	if (dhcp_client->type == G_DHCP_IPV4LL) {
+	else if (dhcp_client->type == G_DHCP_IPV4LL) {
 		dhcp_client->state = INIT_SELECTING;
 		ipv4ll_start(dhcp_client);
 		return 0;
 	}
-
-	if (dhcp_client->retry_times == DISCOVER_RETRIES) {
-		g_signal_emit (dhcp_client, signals[SIG_NO_LEASE], 0);
-		dhcp_client->retry_times = 0;
-		return 0;
-	}
-
-	if (dhcp_client->retry_times == 0) {
-		g_free(dhcp_client->assigned_ip);
-		dhcp_client->assigned_ip = NULL;
-
-		dhcp_client->state = INIT_SELECTING;
-		re = switch_listening_mode(dhcp_client, L2);
-		if (re != 0)
-			return re;
-
-		dhcp_get_random(&rand);
-		dhcp_client->xid = rand;
-		dhcp_client->start = time(NULL);
-	}
-
-	if (!last_address) {
-		addr = 0;
-	} else {
-		addr = ntohl(inet_addr(last_address));
-		if (addr == 0xFFFFFFFF || ((addr & LINKLOCAL_ADDR) ==
-					LINKLOCAL_ADDR)) {
-			addr = 0;
-		} else if (dhcp_client->last_address != last_address) {
-			g_free(dhcp_client->last_address);
-			dhcp_client->last_address = g_strdup(last_address);
+	else {
+		if (dhcp_client->retry_times == DISCOVER_RETRIES) {
+			g_signal_emit (dhcp_client, signals[SIG_NO_LEASE], 0);
+			dhcp_client->retry_times = 0;
+			return 0;
 		}
-	}
 
-	if ((addr != 0) && (dhcp_client->type != G_DHCP_IPV4LL)) {
-		debug(dhcp_client, "DHCP client start with state init_reboot");
-		dhcp_client->requested_ip = addr;
-		dhcp_client->state = REBOOTING;
-		send_request(dhcp_client);
+		if (dhcp_client->retry_times == 0) {
+			g_free(dhcp_client->assigned_ip);
+			dhcp_client->assigned_ip = NULL;
 
-		dhcp_client->timeout = g_timeout_add_seconds_full(
-								G_PRIORITY_HIGH,
-								REQUEST_TIMEOUT,
-								reboot_timeout,
+			dhcp_client->state = INIT_SELECTING;
+			re = switch_listening_mode(dhcp_client, L2);
+			if (re != 0)
+				return re;
+
+			dhcp_get_random(&rand);
+			dhcp_client->xid = rand;
+			dhcp_client->start = time(NULL);
+		}
+
+		if (!last_address) {
+			addr = 0;
+		} else {
+			addr = ntohl(inet_addr(last_address));
+			if (addr == 0xFFFFFFFF || ((addr & LINKLOCAL_ADDR) ==
+						LINKLOCAL_ADDR)) {
+				addr = 0;
+			} else if (dhcp_client->last_address != last_address) {
+				g_free(dhcp_client->last_address);
+				dhcp_client->last_address = g_strdup(last_address);
+			}
+		}
+
+		if ((addr != 0) && (dhcp_client->type != G_DHCP_IPV4LL)) {
+			debug(dhcp_client, "DHCP client start with state init_reboot");
+			dhcp_client->requested_ip = addr;
+			dhcp_client->state = REBOOTING;
+			send_request(dhcp_client);
+
+			dhcp_client->timeout = g_timeout_add_seconds_full(
+									G_PRIORITY_HIGH,
+									REQUEST_TIMEOUT,
+									reboot_timeout,
+									dhcp_client,
+									NULL);
+			return 0;
+		}
+		send_discover(dhcp_client, addr);
+
+		dhcp_client->timeout = g_timeout_add_seconds_full(G_PRIORITY_HIGH,
+								DISCOVER_TIMEOUT,
+								discover_timeout,
 								dhcp_client,
 								NULL);
 		return 0;
 	}
-	send_discover(dhcp_client, addr);
-
-	dhcp_client->timeout = g_timeout_add_seconds_full(G_PRIORITY_HIGH,
-							DISCOVER_TIMEOUT,
-							discover_timeout,
-							dhcp_client,
-							NULL);
-	return 0;
 }
 
 void g_dhcp_client_stop(GDHCPClient *dhcp_client)
