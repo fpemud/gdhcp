@@ -162,10 +162,6 @@ typedef struct {
 	time_t expire;
 } GDHCPIAPrefix;
 
-typedef void (*GDHCPClientEventFunc) (GDHCPClient *client, gpointer user_data);
-
-typedef void (*GDHCPDebugFunc)(const char *str, gpointer user_data);
-
 GDHCP_EXTERN
 GDHCPClient *g_dhcp_client_new(GDHCPType type, int index, GDHCPClientError *error);
 
@@ -204,9 +200,6 @@ GList *g_dhcp_client_get_option(GDHCPClient *client, unsigned char option_code);
 
 GDHCP_EXTERN
 int g_dhcp_client_get_index(GDHCPClient *client);
-
-GDHCP_EXTERN
-void g_dhcp_client_set_debug(GDHCPClient *client, GDHCPDebugFunc func, gpointer user_data);
 
 GDHCP_EXTERN
 int g_dhcp_v6_create_duid(GDHCPDuidType duid_type, int index, int type, unsigned char **duid, int *duid_len);
@@ -307,9 +300,6 @@ int g_dhcp_server_set_option(GDHCPServer *server, unsigned char option_code, con
 
 GDHCP_EXTERN
 int g_dhcp_server_set_ip_range(GDHCPServer *server, const char *start_ip, const char *end_ip);
-
-GDHCP_EXTERN
-void g_dhcp_server_set_debug(GDHCPServer *server, GDHCPDebugFunc func, gpointer user_data);
 
 GDHCP_EXTERN
 void g_dhcp_server_set_lease_time(GDHCPServer *dhcp_server, unsigned int lease_time);

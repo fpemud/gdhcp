@@ -66,8 +66,6 @@ struct _GDHCPServer {
 	GHashTable *option_hash; /* Options send to client */
 	GDHCPSaveLeaseFunc save_lease_func;
 	GDHCPLeaseAddedCb lease_added_cb;
-	GDHCPDebugFunc debug_func;
-	gpointer debug_data;
 };
 
 struct dhcp_lease {
@@ -78,18 +76,17 @@ struct dhcp_lease {
 
 static inline void debug(GDHCPServer *server, const char *format, ...)
 {
+#if 0
 	char str[256];
 	va_list ap;
-
-	if (!server->debug_func)
-		return;
 
 	va_start(ap, format);
 
 	if (vsnprintf(str, sizeof(str), format, ap) > 0)
-		server->debug_func(str, server->debug_data);
+		printf(str);
 
 	va_end(ap);
+#endif
 }
 
 static struct dhcp_lease *find_lease_by_mac(GDHCPServer *dhcp_server,
@@ -399,8 +396,6 @@ GDHCPServer *g_dhcp_server_new(GDHCPType type,
 	dhcp_server->listener_watch = -1;
 	dhcp_server->listener_channel = NULL;
 	dhcp_server->save_lease_func = NULL;
-	dhcp_server->debug_func = NULL;
-	dhcp_server->debug_data = NULL;
 
 	*error = G_DHCP_SERVER_ERROR_NONE;
 
@@ -897,14 +892,4 @@ void g_dhcp_server_set_lease_time(GDHCPServer *dhcp_server,
 		return;
 
 	dhcp_server->lease_seconds = lease_time;
-}
-
-void g_dhcp_server_set_debug(GDHCPServer *dhcp_server,
-				GDHCPDebugFunc func, gpointer user_data)
-{
-	if (!dhcp_server)
-		return;
-
-	dhcp_server->debug_func = func;
-	dhcp_server->debug_data = user_data;
 }

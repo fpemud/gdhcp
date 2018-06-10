@@ -45,12 +45,6 @@ static void handle_error(GDHCPServerError error)
 	}
 }
 
-static void dhcp_debug(const char *str, void *data)
-{
-	printf("%s: %s\n", (const char *) data, str);
-}
-
-
 int main(int argc, char *argv[])
 {
 	struct sigaction sa;
@@ -72,8 +66,6 @@ int main(int argc, char *argv[])
 		handle_error(error);
 		exit(0);
 	}
-
-	g_dhcp_server_set_debug(dhcp_server, dhcp_debug, "DHCP");
 
 	g_dhcp_server_set_lease_time(dhcp_server, 3600);
 	g_dhcp_server_set_option(dhcp_server, G_DHCP_SUBNET, "255.255.0.0");

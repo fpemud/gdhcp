@@ -449,18 +449,17 @@ static void gdhcp_client_dispose (GObject *object)
 
 static inline void debug(GDHCPClient *client, const char *format, ...)
 {
+#if 0
 	char str[256];
 	va_list ap;
-
-	if (!client->debug_func)
-		return;
 
 	va_start(ap, format);
 
 	if (vsnprintf(str, sizeof(str), format, ap) > 0)
-		client->debug_func(str, client->debug_data);
+		printf(str);
 
 	va_end(ap);
+#endif
 }
 
 /* Initialize the packet with the proper defaults */
@@ -978,8 +977,7 @@ static gchar *convert_to_hex(unsigned char *buf, int len)
 	return ret;
 }
 
-int g_dhcp_v6_client_set_duid(GDHCPClient *dhcp_client, unsigned char *duid,
-			int duid_len)
+int g_dhcp_v6_client_set_duid(GDHCPClient *dhcp_client, unsigned char *duid, int duid_len)
 {
 	if (!dhcp_client || dhcp_client->type != G_DHCP_IPV6)
 		return -EINVAL;
@@ -989,7 +987,7 @@ int g_dhcp_v6_client_set_duid(GDHCPClient *dhcp_client, unsigned char *duid,
 	dhcp_client->duid = duid;
 	dhcp_client->duid_len = duid_len;
 
-	if (dhcp_client->debug_func) {
+	{
 		gchar *hex = convert_to_hex(duid, duid_len);
 		debug(dhcp_client, "DUID(%d) %s", duid_len, hex);
 		g_free(hex);
@@ -2179,11 +2177,10 @@ static GList *add_prefix(GDHCPClient *dhcp_client, GList *list,
 	if (!ia_prefix)
 		return list;
 
-	if (dhcp_client->debug_func) {
+	{
 		char addr_str[INET6_ADDRSTRLEN + 1];
 		inet_ntop(AF_INET6, addr, addr_str, INET6_ADDRSTRLEN);
-		debug(dhcp_client, "prefix %s/%d preferred %u valid %u",
-			addr_str, prefixlen, preferred, valid);
+		debug(dhcp_client, "prefix %s/%d preferred %u valid %u", addr_str, prefixlen, preferred, valid);
 	}
 
 	memcpy(&ia_prefix->prefix, addr, sizeof(struct in6_addr));
@@ -3351,16 +3348,6 @@ uint16_t g_dhcp_v6_client_get_status(GDHCPClient *dhcp_client)
 		return 0;
 
 	return dhcp_client->status_code;
-}
-
-void g_dhcp_client_set_debug(GDHCPClient *dhcp_client,
-				GDHCPDebugFunc func, gpointer user_data)
-{
-	if (!dhcp_client)
-		return;
-
-	dhcp_client->debug_func = func;
-	dhcp_client->debug_data = user_data;
 }
 
 static GDHCPIAPrefix *copy_prefix(gpointer data)
