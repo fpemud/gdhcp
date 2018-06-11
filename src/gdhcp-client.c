@@ -152,6 +152,9 @@ enum {
 static GParamSpec *properties[N_PROPS];
 static guint signals[N_SIGNALS];
 
+static void gdhcp_client_constructed (GObject *object);
+static void gdhcp_client_dispose (GObject *object);
+
 static void gdhcp_client_class_init (GDHCPClientClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
@@ -304,14 +307,14 @@ static void gdhcp_client_class_init (GDHCPClientClass *klass)
 								g_cclosure_marshal_VOID__VOIDv);
 
 	/**
-	 * GDHCPClient::rquest:
+	 * GDHCPClient::request:
 	 *
-	 * The "rquest" signal is called when FIXME.
+	 * The "request" signal is called when FIXME.
 	 */
-	signals[SIG_REQUEST] = g_signal_new ("rquest",
+	signals[SIG_REQUEST] = g_signal_new ("request",
 										 G_TYPE_FROM_CLASS (klass),
 										 G_SIGNAL_RUN_LAST,
-										 G_STRUCT_OFFSET (GDHCPClientClass, rquest),
+										 G_STRUCT_OFFSET (GDHCPClientClass, request),
 										 NULL, NULL,
 										 g_cclosure_marshal_VOID__VOID,
 										 G_TYPE_NONE, 0);
