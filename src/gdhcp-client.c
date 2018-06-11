@@ -167,248 +167,248 @@ static void gdhcp_client_class_init (GDHCPClientClass *klass)
 	 *
 	 * The "lease_available" signal is called when FIXME.
 	 */
-	signals[SIG_LEASE_AVAILABLE] = g_signal_new ("lease_available",
-												 G_TYPE_FROM_CLASS (klass),
-												 G_SIGNAL_RUN_LAST,
-												 G_STRUCT_OFFSET (GDHCPClientClass, lease_available),
-												 NULL, NULL,
-												 g_cclosure_marshal_VOID__VOID,
-												 G_TYPE_NONE, 0);
-	g_signal_set_va_marshaller (signals[SIG_LEASE_AVAILABLE],
-								G_TYPE_FROM_CLASS (klass),
-								g_cclosure_marshal_VOID__VOIDv);
+	signals[SIG_LEASE_AVAILABLE] = g_signal_new("lease_available",
+												G_TYPE_FROM_CLASS(klass),
+												G_SIGNAL_RUN_LAST,
+												G_STRUCT_OFFSET(GDHCPClientClass, lease_available),
+												NULL, NULL,
+												g_cclosure_marshal_VOID__VOID,
+												G_TYPE_NONE, 0);
+	g_signal_set_va_marshaller(signals[SIG_LEASE_AVAILABLE],
+							   G_TYPE_FROM_CLASS(klass),
+							   g_cclosure_marshal_VOID__VOIDv);
 
 	/**
 	 * GDHCPClient::ipv4ll_available:
 	 *
 	 * The "ipv4ll_available" signal is called when FIXME.
 	 */
-	signals[SIG_IPV4LL_AVAILABLE] = g_signal_new ("ipv4ll_available",
-												  G_TYPE_FROM_CLASS (klass),
-												  G_SIGNAL_RUN_LAST,
-												  G_STRUCT_OFFSET (GDHCPClientClass, ipv4ll_available),
-												  NULL, NULL,
-												  g_cclosure_marshal_VOID__VOID,
-												  G_TYPE_NONE, 0);
-	g_signal_set_va_marshaller (signals[SIG_IPV4LL_AVAILABLE],
-								G_TYPE_FROM_CLASS (klass),
-								g_cclosure_marshal_VOID__VOIDv);
+	signals[SIG_IPV4LL_AVAILABLE] = g_signal_new("ipv4ll_available",
+												 G_TYPE_FROM_CLASS(klass),
+												 G_SIGNAL_RUN_LAST,
+												 G_STRUCT_OFFSET(GDHCPClientClass, ipv4ll_available),
+												 NULL, NULL,
+												 g_cclosure_marshal_VOID__VOID,
+												 G_TYPE_NONE, 0);
+	g_signal_set_va_marshaller(signals[SIG_IPV4LL_AVAILABLE],
+							   G_TYPE_FROM_CLASS(klass),
+							   g_cclosure_marshal_VOID__VOIDv);
 
 	/**
 	 * GDHCPClient::no_lease:
 	 *
 	 * The "no_lease" signal is called when FIXME.
 	 */
-	signals[SIG_NO_LEASE] = g_signal_new ("no_lease",
-										  G_TYPE_FROM_CLASS (klass),
-										  G_SIGNAL_RUN_LAST,
-										  G_STRUCT_OFFSET (GDHCPClientClass, no_lease),
-										  NULL, NULL,
-										  g_cclosure_marshal_VOID__VOID,
-										  G_TYPE_NONE, 0);
-	g_signal_set_va_marshaller (signals[SIG_NO_LEASE],
-								G_TYPE_FROM_CLASS (klass),
-								g_cclosure_marshal_VOID__VOIDv);
+	signals[SIG_NO_LEASE] = g_signal_new("no_lease",
+										 G_TYPE_FROM_CLASS(klass),
+										 G_SIGNAL_RUN_LAST,
+										 G_STRUCT_OFFSET(GDHCPClientClass, no_lease),
+										 NULL, NULL,
+										 g_cclosure_marshal_VOID__VOID,
+										 G_TYPE_NONE, 0);
+	g_signal_set_va_marshaller(signals[SIG_NO_LEASE],
+							   G_TYPE_FROM_CLASS(klass),
+							   g_cclosure_marshal_VOID__VOIDv);
 
 	/**
 	 * GDHCPClient::lease_lost:
 	 *
 	 * The "lease_lost" signal is called when FIXME.
 	 */
-	signals[SIG_LEASE_LOST] = g_signal_new ("lease_lost",
-											G_TYPE_FROM_CLASS (klass),
-											G_SIGNAL_RUN_LAST,
-											G_STRUCT_OFFSET (GDHCPClientClass, lease_lost),
-											NULL, NULL,
-											g_cclosure_marshal_VOID__VOID,
-											G_TYPE_NONE, 0);
-	g_signal_set_va_marshaller (signals[SIG_LEASE_LOST],
-								G_TYPE_FROM_CLASS (klass),
-								g_cclosure_marshal_VOID__VOIDv);
+	signals[SIG_LEASE_LOST] = g_signal_new("lease_lost",
+										   G_TYPE_FROM_CLASS(klass),
+										   G_SIGNAL_RUN_LAST,
+										   G_STRUCT_OFFSET(GDHCPClientClass, lease_lost),
+										   NULL, NULL,
+										   g_cclosure_marshal_VOID__VOID,
+										   G_TYPE_NONE, 0);
+	g_signal_set_va_marshaller(signals[SIG_LEASE_LOST],
+							   G_TYPE_FROM_CLASS(klass),
+							   g_cclosure_marshal_VOID__VOIDv);
 
 	/**
 	 * GDHCPClient::ipv4ll_lost:
 	 *
 	 * The "ipv4ll_lost" signal is called when FIXME.
 	 */
-	signals[SIG_IPV4LL_LOST] = g_signal_new ("ipv4ll_lost",
-											 G_TYPE_FROM_CLASS (klass),
-											 G_SIGNAL_RUN_LAST,
-											 G_STRUCT_OFFSET (GDHCPClientClass, ipv4ll_lost),
-											 NULL, NULL,
-											 g_cclosure_marshal_VOID__VOID,
-											 G_TYPE_NONE, 0);
-	g_signal_set_va_marshaller (signals[SIG_IPV4LL_LOST],
-								G_TYPE_FROM_CLASS (klass),
-								g_cclosure_marshal_VOID__VOIDv);
+	signals[SIG_IPV4LL_LOST] = g_signal_new("ipv4ll_lost",
+											G_TYPE_FROM_CLASS(klass),
+											G_SIGNAL_RUN_LAST,
+											G_STRUCT_OFFSET(GDHCPClientClass, ipv4ll_lost),
+											NULL, NULL,
+											g_cclosure_marshal_VOID__VOID,
+											G_TYPE_NONE, 0);
+	g_signal_set_va_marshaller(signals[SIG_IPV4LL_LOST],
+							   G_TYPE_FROM_CLASS(klass),
+							   g_cclosure_marshal_VOID__VOIDv);
 
 	/**
 	 * GDHCPClient::address_conflict:
 	 *
 	 * The "address_conflict" signal is called when FIXME.
 	 */
-	signals[SIG_ADDRESS_CONFLICT] = g_signal_new ("address_conflict",
-												  G_TYPE_FROM_CLASS (klass),
-												  G_SIGNAL_RUN_LAST,
-												  G_STRUCT_OFFSET (GDHCPClientClass, address_conflict),
-												  NULL, NULL,
-												  g_cclosure_marshal_VOID__VOID,
-												  G_TYPE_NONE, 0);
-	g_signal_set_va_marshaller (signals[SIG_ADDRESS_CONFLICT],
-								G_TYPE_FROM_CLASS (klass),
-								g_cclosure_marshal_VOID__VOIDv);
+	signals[SIG_ADDRESS_CONFLICT] = g_signal_new("address_conflict",
+												 G_TYPE_FROM_CLASS(klass),
+												 G_SIGNAL_RUN_LAST,
+												 G_STRUCT_OFFSET(GDHCPClientClass, address_conflict),
+												 NULL, NULL,
+												 g_cclosure_marshal_VOID__VOID,
+												 G_TYPE_NONE, 0);
+	g_signal_set_va_marshaller(signals[SIG_ADDRESS_CONFLICT],
+							   G_TYPE_FROM_CLASS(klass),
+							   g_cclosure_marshal_VOID__VOIDv);
 
 	/**
 	 * GDHCPClient::information_req:
 	 *
 	 * The "information_req" signal is called when FIXME.
 	 */
-	signals[SIG_INFORMATION_REQ] = g_signal_new ("information_req",
-												 G_TYPE_FROM_CLASS (klass),
-												 G_SIGNAL_RUN_LAST,
-												 G_STRUCT_OFFSET (GDHCPClientClass, information_req),
-												 NULL, NULL,
-												 g_cclosure_marshal_VOID__VOID,
-												 G_TYPE_NONE, 0);
-	g_signal_set_va_marshaller (signals[SIG_INFORMATION_REQ],
-								G_TYPE_FROM_CLASS (klass),
-								g_cclosure_marshal_VOID__VOIDv);
+	signals[SIG_INFORMATION_REQ] = g_signal_new("information_req",
+												G_TYPE_FROM_CLASS(klass),
+												G_SIGNAL_RUN_LAST,
+												G_STRUCT_OFFSET(GDHCPClientClass, information_req),
+												NULL, NULL,
+												g_cclosure_marshal_VOID__VOID,
+												G_TYPE_NONE, 0);
+	g_signal_set_va_marshaller(signals[SIG_INFORMATION_REQ],
+							   G_TYPE_FROM_CLASS(klass),
+							   g_cclosure_marshal_VOID__VOIDv);
 
 	/**
 	 * GDHCPClient::solicitation:
 	 *
 	 * The "solicitation" signal is called when FIXME.
 	 */
-	signals[SIG_SOLICITATION] = g_signal_new ("solicitation",
-											  G_TYPE_FROM_CLASS (klass),
-											  G_SIGNAL_RUN_LAST,
-											  G_STRUCT_OFFSET (GDHCPClientClass, solicitation),
-											  NULL, NULL,
-											  g_cclosure_marshal_VOID__VOID,
-											  G_TYPE_NONE, 0);
-	g_signal_set_va_marshaller (signals[SIG_SOLICITATION],
-								G_TYPE_FROM_CLASS (klass),
-								g_cclosure_marshal_VOID__VOIDv);
+	signals[SIG_SOLICITATION] = g_signal_new("solicitation",
+											 G_TYPE_FROM_CLASS(klass),
+											 G_SIGNAL_RUN_LAST,
+											 G_STRUCT_OFFSET(GDHCPClientClass, solicitation),
+											 NULL, NULL,
+											 g_cclosure_marshal_VOID__VOID,
+											 G_TYPE_NONE, 0);
+	g_signal_set_va_marshaller(signals[SIG_SOLICITATION],
+							   G_TYPE_FROM_CLASS(klass),
+							   g_cclosure_marshal_VOID__VOIDv);
 
 	/**
 	 * GDHCPClient::advertise:
 	 *
 	 * The "advertise" signal is called when FIXME.
 	 */
-	signals[SIG_ADVERTISE] = g_signal_new ("advertise",
-										   G_TYPE_FROM_CLASS (klass),
-										   G_SIGNAL_RUN_LAST,
-										   G_STRUCT_OFFSET (GDHCPClientClass, advertise),
-										   NULL, NULL,
-										   g_cclosure_marshal_VOID__VOID,
-										   G_TYPE_NONE, 0);
-	g_signal_set_va_marshaller (signals[SIG_ADVERTISE],
-								G_TYPE_FROM_CLASS (klass),
-								g_cclosure_marshal_VOID__VOIDv);
+	signals[SIG_ADVERTISE] = g_signal_new("advertise",
+										  G_TYPE_FROM_CLASS(klass),
+										  G_SIGNAL_RUN_LAST,
+										  G_STRUCT_OFFSET(GDHCPClientClass, advertise),
+										  NULL, NULL,
+										  g_cclosure_marshal_VOID__VOID,
+										  G_TYPE_NONE, 0);
+	g_signal_set_va_marshaller(signals[SIG_ADVERTISE],
+							   G_TYPE_FROM_CLASS(klass),
+							   g_cclosure_marshal_VOID__VOIDv);
 
 	/**
 	 * GDHCPClient::request:
 	 *
 	 * The "request" signal is called when FIXME.
 	 */
-	signals[SIG_REQUEST] = g_signal_new ("request",
-										 G_TYPE_FROM_CLASS (klass),
-										 G_SIGNAL_RUN_LAST,
-										 G_STRUCT_OFFSET (GDHCPClientClass, request),
-										 NULL, NULL,
-										 g_cclosure_marshal_VOID__VOID,
-										 G_TYPE_NONE, 0);
-	g_signal_set_va_marshaller (signals[SIG_REQUEST],
-								G_TYPE_FROM_CLASS (klass),
-								g_cclosure_marshal_VOID__VOIDv);
+	signals[SIG_REQUEST] = g_signal_new("request",
+										G_TYPE_FROM_CLASS(klass),
+										G_SIGNAL_RUN_LAST,
+										G_STRUCT_OFFSET(GDHCPClientClass, request),
+										NULL, NULL,
+										g_cclosure_marshal_VOID__VOID,
+										G_TYPE_NONE, 0);
+	g_signal_set_va_marshaller(signals[SIG_REQUEST],
+							   G_TYPE_FROM_CLASS(klass),
+							   g_cclosure_marshal_VOID__VOIDv);
 
 	/**
 	 * GDHCPClient::renew:
 	 *
 	 * The "renew" signal is called when FIXME.
 	 */
-	signals[SIG_RENEW] = g_signal_new ("renew",
-									   G_TYPE_FROM_CLASS (klass),
-									   G_SIGNAL_RUN_LAST,
-									   G_STRUCT_OFFSET (GDHCPClientClass, renew),
-									   NULL, NULL,
-									   g_cclosure_marshal_VOID__VOID,
-									   G_TYPE_NONE, 0);
-	g_signal_set_va_marshaller (signals[SIG_RENEW],
-								G_TYPE_FROM_CLASS (klass),
-								g_cclosure_marshal_VOID__VOIDv);
+	signals[SIG_RENEW] = g_signal_new("renew",
+									  G_TYPE_FROM_CLASS(klass),
+									  G_SIGNAL_RUN_LAST,
+									  G_STRUCT_OFFSET(GDHCPClientClass, renew),
+									  NULL, NULL,
+									  g_cclosure_marshal_VOID__VOID,
+									  G_TYPE_NONE, 0);
+	g_signal_set_va_marshaller(signals[SIG_RENEW],
+							   G_TYPE_FROM_CLASS(klass),
+							   g_cclosure_marshal_VOID__VOIDv);
 
 	/**
 	 * GDHCPClient::rebind:
 	 *
 	 * The "rebind" signal is called when FIXME.
 	 */
-	signals[SIG_REBIND] = g_signal_new ("rebind",
-										G_TYPE_FROM_CLASS (klass),
-										G_SIGNAL_RUN_LAST,
-										G_STRUCT_OFFSET (GDHCPClientClass, rebind),
-										NULL, NULL,
-										g_cclosure_marshal_VOID__VOID,
-										G_TYPE_NONE, 0);
-	g_signal_set_va_marshaller (signals[SIG_REBIND],
-								G_TYPE_FROM_CLASS (klass),
-								g_cclosure_marshal_VOID__VOIDv);
+	signals[SIG_REBIND] = g_signal_new("rebind",
+									   G_TYPE_FROM_CLASS(klass),
+									   G_SIGNAL_RUN_LAST,
+									   G_STRUCT_OFFSET(GDHCPClientClass, rebind),
+									   NULL, NULL,
+									   g_cclosure_marshal_VOID__VOID,
+									   G_TYPE_NONE, 0);
+	g_signal_set_va_marshaller(signals[SIG_REBIND],
+							   G_TYPE_FROM_CLASS(klass),
+							   g_cclosure_marshal_VOID__VOIDv);
 
 	/**
 	 * GDHCPClient::release:
 	 *
 	 * The "release" signal is called when FIXME.
 	 */
-	signals[SIG_RELEASE] = g_signal_new ("release",
-										 G_TYPE_FROM_CLASS (klass),
-										 G_SIGNAL_RUN_LAST,
-										 G_STRUCT_OFFSET (GDHCPClientClass, release),
-										 NULL, NULL,
-										 g_cclosure_marshal_VOID__VOID,
-										 G_TYPE_NONE, 0);
-	g_signal_set_va_marshaller (signals[SIG_RELEASE],
-								G_TYPE_FROM_CLASS (klass),
-								g_cclosure_marshal_VOID__VOIDv);
+	signals[SIG_RELEASE] = g_signal_new("release",
+										G_TYPE_FROM_CLASS(klass),
+										G_SIGNAL_RUN_LAST,
+										G_STRUCT_OFFSET(GDHCPClientClass, release),
+										NULL, NULL,
+										g_cclosure_marshal_VOID__VOID,
+										G_TYPE_NONE, 0);
+	g_signal_set_va_marshaller(signals[SIG_RELEASE],
+							   G_TYPE_FROM_CLASS(klass),
+							   g_cclosure_marshal_VOID__VOIDv);
 
 	/**
 	 * GDHCPClient::confirm:
 	 *
 	 * The "confirm" signal is called when FIXME.
 	 */
-	signals[SIG_CONFIRM] = g_signal_new ("confirm",
-										 G_TYPE_FROM_CLASS (klass),
-										 G_SIGNAL_RUN_LAST,
-										 G_STRUCT_OFFSET (GDHCPClientClass, confirm),
-										 NULL, NULL,
-										 g_cclosure_marshal_VOID__VOID,
-										 G_TYPE_NONE, 0);
-	g_signal_set_va_marshaller (signals[SIG_CONFIRM],
-								G_TYPE_FROM_CLASS (klass),
-								g_cclosure_marshal_VOID__VOIDv);
+	signals[SIG_CONFIRM] = g_signal_new("confirm",
+										G_TYPE_FROM_CLASS(klass),
+										G_SIGNAL_RUN_LAST,
+										G_STRUCT_OFFSET(GDHCPClientClass, confirm),
+										NULL, NULL,
+										g_cclosure_marshal_VOID__VOID,
+										G_TYPE_NONE, 0);
+	g_signal_set_va_marshaller(signals[SIG_CONFIRM],
+							   G_TYPE_FROM_CLASS(klass),
+							   g_cclosure_marshal_VOID__VOIDv);
 
 	/**
 	 * GDHCPClient::decline:
 	 *
 	 * The "decline" signal is called when FIXME.
 	 */
-	signals[SIG_DECLINE] = g_signal_new ("decline",
-										 G_TYPE_FROM_CLASS (klass),
-										 G_SIGNAL_RUN_LAST,
-										 G_STRUCT_OFFSET (GDHCPClientClass, decline),
-										 NULL, NULL,
-										 g_cclosure_marshal_VOID__VOID,
-										 G_TYPE_NONE, 0);
-	g_signal_set_va_marshaller (signals[SIG_DECLINE],
-								G_TYPE_FROM_CLASS (klass),
-								g_cclosure_marshal_VOID__VOIDv);
+	signals[SIG_DECLINE] = g_signal_new("decline",
+										G_TYPE_FROM_CLASS(klass),
+										G_SIGNAL_RUN_LAST,
+										G_STRUCT_OFFSET(GDHCPClientClass, decline),
+										NULL, NULL,
+										g_cclosure_marshal_VOID__VOID,
+										G_TYPE_NONE, 0);
+	g_signal_set_va_marshaller(signals[SIG_DECLINE],
+							   G_TYPE_FROM_CLASS(klass),
+							   g_cclosure_marshal_VOID__VOIDv);
 }
 
-static void gdhcp_client_constructed (GObject *object)
+static void gdhcp_client_constructed(GObject *object)
 {
 	GDHCPClient *dhcp_client = (GDHCPClient *)object;
-	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private (dhcp_client);
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
 
-	G_OBJECT_CLASS (gdhcp_client_parent_class)->constructed (object);
+	G_OBJECT_CLASS (gdhcp_client_parent_class)->constructed(object);
 
 	priv->listener_sockfd = -1;
 	priv->listen_mode = L_NONE;
@@ -428,7 +428,7 @@ static void gdhcp_client_constructed (GObject *object)
 	priv->request_bcast = false;
 }
 
-static void gdhcp_client_dispose (GObject *object)
+static void gdhcp_client_dispose(GObject *object)
 {
 	GDHCPClient *dhcp_client = (GDHCPClient *)object;
 	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
