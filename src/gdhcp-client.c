@@ -152,6 +152,7 @@ enum {
 static GParamSpec *properties[N_PROPS];
 static guint signals[N_SIGNALS];
 
+static void remove_option_value(gpointer data);
 static void gdhcp_client_constructed (GObject *object);
 static void gdhcp_client_dispose (GObject *object);
 
