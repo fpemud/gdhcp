@@ -471,8 +471,7 @@ static void init_packet(GDHCPClient *dhcp_client, gpointer pkt, char type)
 		dhcpv6_init_header(pkt, type);
 	else {
 		struct dhcp_packet *packet = pkt;
-
-		dhcp_init_header(packet, type);
+		dhcp_init_header(pkt, type);
 		memcpy(packet->chaddr, priv->mac_address, 6);
 	}
 }
@@ -525,17 +524,17 @@ static void add_dhcpv6_send_options(GDHCPClient *dhcp_client,
 				unsigned char *buf, int max_buf,
 				unsigned char **ptr_buf)
 {
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
 	struct hash_params params = {
 		.buf = buf,
 		.max_buf = max_buf,
 		.ptr_buf = ptr_buf
 	};
 
-	if (dhcp_client->type != G_DHCP_IPV6)
+	if (priv->type != G_DHCP_IPV6)
 		return;
 
-	g_hash_table_foreach(dhcp_client->send_value_hash,
-				add_dhcpv6_binary_option, &params);
+	g_hash_table_foreach(priv->send_value_hash, add_dhcpv6_binary_option, &params);
 
 	*ptr_buf = *params.ptr_buf;
 }
@@ -803,8 +802,7 @@ static int send_release(GDHCPClient *dhcp_client, uint32_t server, uint32_t ciad
 
 	dhcp_add_option_uint32(&packet, DHCP_SERVER_ID, server);
 
-	return dhcp_send_kernel_packet(&packet, ciaddr, CLIENT_PORT,
-						server, SERVER_PORT);
+	return dhcp_send_kernel_packet(&packet, ciaddr, CLIENT_PORT, server, SERVER_PORT);
 }
 
 static int switch_listening_mode(GDHCPClient *dhcp_client, ListenMode listen_mode);
@@ -910,18 +908,14 @@ done:
 
 void g_dhcp_v6_client_set_retransmit(GDHCPClient *dhcp_client)
 {
-	if (!dhcp_client)
-		return;
-
-	dhcp_client->retransmit = true;
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
+	priv->retransmit = true;
 }
 
 void g_dhcp_v6_client_clear_retransmit(GDHCPClient *dhcp_client)
 {
-	if (!dhcp_client)
-		return;
-
-	dhcp_client->retransmit = false;
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
+	priv->retransmit = false;
 }
 
 int g_dhcp_v6_create_duid(GDHCPDuidType duid_type, int index, int type,
@@ -930,37 +924,37 @@ int g_dhcp_v6_create_duid(GDHCPDuidType duid_type, int index, int type,
 	time_t duid_time;
 
 	switch (duid_type) {
-	case G_DHCPV6_DUID_LLT:
-		*duid_len = 2 + 2 + 4 + ETH_ALEN;
-		*duid = g_try_malloc(*duid_len);
-		if (!*duid)
-			return -ENOMEM;
+		case G_DHCPV6_DUID_LLT:
+			*duid_len = 2 + 2 + 4 + ETH_ALEN;
+			*duid = g_try_malloc(*duid_len);
+			if (!*duid)
+				return -ENOMEM;
 
-		(*duid)[0] = 0;
-		(*duid)[1] = 1;
-		get_interface_mac_address(index, &(*duid)[2 + 2 + 4]);
-		(*duid)[2] = 0;
-		(*duid)[3] = type;
-		duid_time = time(NULL) - DUID_TIME_EPOCH;
-		(*duid)[4] = duid_time >> 24;
-		(*duid)[5] = duid_time >> 16;
-		(*duid)[6] = duid_time >> 8;
-		(*duid)[7] = duid_time & 0xff;
-		break;
-	case G_DHCPV6_DUID_EN:
-		return -EINVAL;
-	case G_DHCPV6_DUID_LL:
-		*duid_len = 2 + 2 + ETH_ALEN;
-		*duid = g_try_malloc(*duid_len);
-		if (!*duid)
-			return -ENOMEM;
+			(*duid)[0] = 0;
+			(*duid)[1] = 1;
+			get_interface_mac_address(index, &(*duid)[2 + 2 + 4]);
+			(*duid)[2] = 0;
+			(*duid)[3] = type;
+			duid_time = time(NULL) - DUID_TIME_EPOCH;
+			(*duid)[4] = duid_time >> 24;
+			(*duid)[5] = duid_time >> 16;
+			(*duid)[6] = duid_time >> 8;
+			(*duid)[7] = duid_time & 0xff;
+			break;
+		case G_DHCPV6_DUID_EN:
+			return -EINVAL;
+		case G_DHCPV6_DUID_LL:
+			*duid_len = 2 + 2 + ETH_ALEN;
+			*duid = g_try_malloc(*duid_len);
+			if (!*duid)
+				return -ENOMEM;
 
-		(*duid)[0] = 0;
-		(*duid)[1] = 3;
-		get_interface_mac_address(index, &(*duid)[2 + 2]);
-		(*duid)[2] = 0;
-		(*duid)[3] = type;
-		break;
+			(*duid)[0] = 0;
+			(*duid)[1] = 3;
+			get_interface_mac_address(index, &(*duid)[2 + 2]);
+			(*duid)[2] = 0;
+			(*duid)[3] = type;
+			break;
 	}
 
 	return 0;
@@ -979,13 +973,14 @@ static gchar *convert_to_hex(unsigned char *buf, int len)
 
 int g_dhcp_v6_client_set_duid(GDHCPClient *dhcp_client, unsigned char *duid, int duid_len)
 {
-	if (!dhcp_client || dhcp_client->type != G_DHCP_IPV6)
-		return -EINVAL;
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
 
-	g_free(dhcp_client->duid);
+	g_assert(priv->type == G_DHCP_IPV6);
 
-	dhcp_client->duid = duid;
-	dhcp_client->duid_len = duid_len;
+	g_free(priv->duid);
+
+	priv->duid = duid;
+	priv->duid_len = duid_len;
 
 	{
 		gchar *hex = convert_to_hex(duid, duid_len);
@@ -999,21 +994,21 @@ int g_dhcp_v6_client_set_duid(GDHCPClient *dhcp_client, unsigned char *duid, int
 int g_dhcp_v6_client_set_pd(GDHCPClient *dhcp_client, uint32_t *T1,
 			uint32_t *T2, GSList *prefixes)
 {
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
 	uint8_t options[1452];
 	unsigned int max_buf = sizeof(options);
 	int len, count = g_slist_length(prefixes);
 
-	if (!dhcp_client || dhcp_client->type != G_DHCP_IPV6)
-		return -EINVAL;
+	g_assert(priv->type == G_DHCP_IPV6);
 
 	g_dhcp_client_set_request(dhcp_client, G_DHCPV6_IA_PD);
 
 	memset(options, 0, sizeof(options));
 
-	options[0] = dhcp_client->iaid >> 24;
-	options[1] = dhcp_client->iaid >> 16;
-	options[2] = dhcp_client->iaid >> 8;
-	options[3] = dhcp_client->iaid;
+	options[0] = priv->iaid >> 24;
+	options[1] = priv->iaid >> 16;
+	options[2] = priv->iaid >> 8;
+	options[3] = priv->iaid;
 
 	if (T1) {
 		uint32_t t = htonl(*T1);
@@ -1035,9 +1030,7 @@ int g_dhcp_v6_client_set_pd(GDHCPClient *dhcp_client, uint32_t *T1,
 			uint8_t sub_option[4+4+1+16];
 
 			if ((len + 2 + 2 + sizeof(sub_option)) >= max_buf) {
-				debug(dhcp_client,
-					"Too long dhcpv6 message "
-					"when writing IA prefix option");
+				debug(dhcp_client, "Too long dhcpv6 message when writing IA prefix option");
 				return -EINVAL;
 			}
 
@@ -1054,8 +1047,7 @@ int g_dhcp_v6_client_set_pd(GDHCPClient *dhcp_client, uint32_t *T1,
 		}
 	}
 
-	g_dhcp_v6_client_set_send(dhcp_client, G_DHCPV6_IA_PD,
-				options, len);
+	g_dhcp_v6_client_set_send(dhcp_client, G_DHCPV6_IA_PD, options, len);
 
 	return 0;
 }
