@@ -43,16 +43,6 @@ G_BEGIN_DECLS
 #define GDHCP_TYPE_CLIENT  (gdhcp_client_get_type())
 #define GDHCP_CLIENT_ERROR (gdhcp_client_error_quark())
 
-typedef enum {
-	G_DHCP_CLIENT_ERROR_NONE,
-	G_DHCP_CLIENT_ERROR_INTERFACE_UNAVAILABLE,
-	G_DHCP_CLIENT_ERROR_INTERFACE_IN_USE,
-	G_DHCP_CLIENT_ERROR_INTERFACE_DOWN,
-	G_DHCP_CLIENT_ERROR_NOMEM,
-	G_DHCP_CLIENT_ERROR_INVALID_INDEX,
-	G_DHCP_CLIENT_ERROR_INVALID_OPTION
-} GDHCPClientError;
-
 G_DECLARE_DERIVABLE_TYPE (GDHCPClient, gdhcp_client, GDHCP, CLIENT, GObject)
 
 struct _GDHCPClientClass
@@ -163,7 +153,7 @@ typedef struct {
 } GDHCPIAPrefix;
 
 GDHCP_EXTERN
-GDHCPClient *g_dhcp_client_new(GDHCPType type, int index, GDHCPClientError *error);
+GDHCPClient *g_dhcp_client_new(GDHCPType type, int index, GError **error);
 
 GDHCP_EXTERN
 int g_dhcp_client_start(GDHCPClient *client, const char *last_address);
@@ -172,7 +162,7 @@ GDHCP_EXTERN
 void g_dhcp_client_stop(GDHCPClient *client);
 
 GDHCP_EXTERN
-GDHCPClientError g_dhcp_client_set_request(GDHCPClient *client, unsigned int option_code);
+void g_dhcp_client_set_request(GDHCPClient *client, unsigned int option_code);
 
 GDHCP_EXTERN
 void g_dhcp_client_clear_requests(GDHCPClient *dhcp_client);
@@ -181,10 +171,10 @@ GDHCP_EXTERN
 void g_dhcp_client_clear_values(GDHCPClient *dhcp_client);
 
 GDHCP_EXTERN
-GDHCPClientError g_dhcp_client_set_id(GDHCPClient *client);
+void g_dhcp_client_set_id(GDHCPClient *client, GError **error);
 
 GDHCP_EXTERN
-GDHCPClientError g_dhcp_client_set_send(GDHCPClient *client, unsigned char option_code, const char *option_value);
+void g_dhcp_client_set_send(GDHCPClient *client, unsigned char option_code, const char *option_value, GError **error);
 
 GDHCP_EXTERN
 char *g_dhcp_client_get_server_address(GDHCPClient *client);

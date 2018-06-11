@@ -34,31 +34,9 @@ static void print_elapsed(void)
 	printf("elapsed: %f seconds\n", elapsed);
 }
 
-static void handle_error(GDHCPClientError error)
+static void handle_error(GError *error)
 {
-	switch (error) {
-	case G_DHCP_CLIENT_ERROR_NONE:
-		printf("dhcp client ok\n");
-		break;
-	case G_DHCP_CLIENT_ERROR_INTERFACE_UNAVAILABLE:
-		printf("Interface unavailable\n");
-		break;
-	case G_DHCP_CLIENT_ERROR_INTERFACE_IN_USE:
-		printf("Interface in use\n");
-		break;
-	case G_DHCP_CLIENT_ERROR_INTERFACE_DOWN:
-		printf("Interface down\n");
-		break;
-	case G_DHCP_CLIENT_ERROR_NOMEM:
-		printf("No memory\n");
-		break;
-	case G_DHCP_CLIENT_ERROR_INVALID_INDEX:
-		printf("Invalid index\n");
-		break;
-	case G_DHCP_CLIENT_ERROR_INVALID_OPTION:
-		printf("Invalid option\n");
-		break;
-	}
+	printf("%s\n", error->message);
 }
 
 static void no_lease_cb(GDHCPClient *dhcp_client, gpointer user_data)
@@ -108,7 +86,7 @@ static void lease_available_cb(GDHCPClient *dhcp_client, gpointer user_data)
 int main(int argc, char *argv[])
 {
 	struct sigaction sa;
-	GDHCPClientError error;
+	GError *error = NULL;
 	GDHCPClient *dhcp_client;
 	int index;
 

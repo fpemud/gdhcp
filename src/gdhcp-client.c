@@ -3199,8 +3199,7 @@ char *g_dhcp_client_get_netmask(GDHCPClient *dhcp_client)
 	return NULL;
 }
 
-GDHCPClientError g_dhcp_client_set_request(GDHCPClient *dhcp_client,
-						unsigned int option_code)
+void g_dhcp_client_set_request(GDHCPClient *dhcp_client, unsigned int option_code)
 {
 	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
 
@@ -3208,8 +3207,6 @@ GDHCPClientError g_dhcp_client_set_request(GDHCPClient *dhcp_client,
 		priv->request_list = g_list_prepend(
 								priv->request_list,
 								(GINT_TO_POINTER((int) option_code)));
-
-	return G_DHCP_CLIENT_ERROR_NONE;
 }
 
 void g_dhcp_client_clear_requests(GDHCPClient *dhcp_client)
@@ -3253,7 +3250,7 @@ static uint8_t *alloc_dhcp_string_option(int code, const char *str)
 	return alloc_dhcp_data_option(code, (const uint8_t *)str, strlen(str));
 }
 
-GDHCPClientError g_dhcp_client_set_id(GDHCPClient *dhcp_client)
+void g_dhcp_client_set_id(GDHCPClient *dhcp_client, GError **error)
 {
 	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
 	const unsigned maclen = 6;
@@ -3267,33 +3264,36 @@ GDHCPClientError g_dhcp_client_set_id(GDHCPClient *dhcp_client)
 	memcpy(&idbuf[1], priv->mac_address, maclen);
 
 	data_option = alloc_dhcp_data_option(option_code, idbuf, idlen);
-	if (!data_option)
-		return G_DHCP_CLIENT_ERROR_NOMEM;
+	if (!data_option) {
+		g_set_error_literal(error,
+							g_quark_from_string("fixme"),
+							1,
+							"No memory");
+		return;
+	}
 
 	g_hash_table_insert(priv->send_value_hash, GINT_TO_POINTER((int) option_code), data_option);
-
-	return G_DHCP_CLIENT_ERROR_NONE;
 }
 
 /* Now only support send hostname and vendor class ID */
-GDHCPClientError g_dhcp_client_set_send(GDHCPClient *dhcp_client,
-		unsigned char option_code, const char *option_value)
+void g_dhcp_client_set_send(GDHCPClient *dhcp_client,
+		unsigned char option_code, const char *option_value, GError **error)
 {
 	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
 	uint8_t *binary_option;
 
-	if ((option_code == G_DHCP_HOST_NAME ||
-		option_code == G_DHCP_VENDOR_CLASS_ID) && option_value) {
-		binary_option = alloc_dhcp_string_option(option_code,
-							option_value);
-		if (!binary_option)
-			return G_DHCP_CLIENT_ERROR_NOMEM;
+	if ((option_code == G_DHCP_HOST_NAME || option_code == G_DHCP_VENDOR_CLASS_ID) && option_value) {
+		binary_option = alloc_dhcp_string_option(option_code, option_value);
+		if (!binary_option) {
+			g_set_error_literal(error,
+					g_quark_from_string("fixme"),
+					1,
+					"No memory");
+			return;
+		}
 
-		g_hash_table_insert(priv->send_value_hash,
-			GINT_TO_POINTER((int) option_code), binary_option);
+		g_hash_table_insert(priv->send_value_hash, GINT_TO_POINTER((int) option_code), binary_option);
 	}
-
-	return G_DHCP_CLIENT_ERROR_NONE;
 }
 
 static uint8_t *alloc_dhcpv6_option(uint16_t code, uint8_t *option, uint16_t len)
