@@ -991,8 +991,7 @@ int g_dhcp_v6_client_set_duid(GDHCPClient *dhcp_client, unsigned char *duid, int
 	return 0;
 }
 
-int g_dhcp_v6_client_set_pd(GDHCPClient *dhcp_client, uint32_t *T1,
-			uint32_t *T2, GSList *prefixes)
+int g_dhcp_v6_client_set_pd(GDHCPClient *dhcp_client, uint32_t *T1, uint32_t *T2, GSList *prefixes)
 {
 	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
 	uint8_t options[1452];
@@ -1054,30 +1053,31 @@ int g_dhcp_v6_client_set_pd(GDHCPClient *dhcp_client, uint32_t *T1,
 
 uint32_t g_dhcp_v6_client_get_iaid(GDHCPClient *dhcp_client)
 {
-	if (!dhcp_client || dhcp_client->type != G_DHCP_IPV6)
-		return 0;
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
 
-	return dhcp_client->iaid;
+	g_assert(priv->type == G_DHCP_IPV6);
+
+	return priv->iaid;
 }
 
 void g_dhcp_v6_client_set_iaid(GDHCPClient *dhcp_client, uint32_t iaid)
 {
-	if (!dhcp_client || dhcp_client->type != G_DHCP_IPV6)
-		return;
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
 
-	dhcp_client->iaid = iaid;
+	g_assert(priv->type == G_DHCP_IPV6);
+
+	priv->iaid = iaid;
 }
 
-void g_dhcp_v6_client_create_iaid(GDHCPClient *dhcp_client, int index,
-				unsigned char *iaid)
+void g_dhcp_v6_client_create_iaid(GDHCPClient *dhcp_client, int index, unsigned char *iaid)
 {
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
 	uint8_t buf[6];
 
 	get_interface_mac_address(index, buf);
 
 	memcpy(iaid, &buf[2], 4);
-	dhcp_client->iaid = iaid[0] << 24 |
-			iaid[1] << 16 | iaid[2] << 8 | iaid[3];
+	priv->iaid = iaid[0] << 24 | iaid[1] << 16 | iaid[2] << 8 | iaid[3];
 }
 
 int g_dhcp_v6_client_get_timeouts(GDHCPClient *dhcp_client,
@@ -1085,42 +1085,40 @@ int g_dhcp_v6_client_get_timeouts(GDHCPClient *dhcp_client,
 				time_t *started,
 				time_t *expire)
 {
-	if (!dhcp_client || dhcp_client->type != G_DHCP_IPV6)
-		return -EINVAL;
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
+
+	g_assert(priv->type == G_DHCP_IPV6);
 
 	if (T1)
-		*T1 = (dhcp_client->expire == 0xffffffff) ? 0xffffffff:
-			dhcp_client->T1;
+		*T1 = (priv->expire == 0xffffffff) ? 0xffffffff : priv->T1;
 
 	if (T2)
-		*T2 = (dhcp_client->expire == 0xffffffff) ? 0xffffffff:
-			dhcp_client->T2;
+		*T2 = (priv->expire == 0xffffffff) ? 0xffffffff : priv->T2;
 
 	if (started)
-		*started = dhcp_client->last_request;
+		*started = priv->last_request;
 
 	if (expire)
-		*expire = (dhcp_client->expire == 0xffffffff) ? 0xffffffff:
-			dhcp_client->last_request + dhcp_client->expire;
+		*expire = (priv->expire == 0xffffffff) ? 0xffffffff : priv->last_request + priv->expire;
 
 	return 0;
 }
 
-static uint8_t *create_iaaddr(GDHCPClient *dhcp_client, uint8_t *buf,
-				uint16_t len)
+static uint8_t *create_iaaddr(GDHCPClient *dhcp_client, uint8_t *buf, uint16_t len)
 {
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
+
 	buf[0] = 0;
 	buf[1] = G_DHCPV6_IAADDR;
 	buf[2] = 0;
 	buf[3] = len;
-	memcpy(&buf[4], &dhcp_client->ia_na, 16);
+	memcpy(&buf[4], &priv->ia_na, 16);
 	memset(&buf[20], 0, 4); /* preferred */
 	memset(&buf[24], 0, 4); /* valid */
 	return buf;
 }
 
-static uint8_t *append_iaaddr(GDHCPClient *dhcp_client, uint8_t *buf,
-			const char *address)
+static uint8_t *append_iaaddr(GDHCPClient *dhcp_client, uint8_t *buf, const char *address)
 {
 	struct in6_addr addr;
 
@@ -1157,6 +1155,8 @@ int g_dhcp_v6_client_set_ia(GDHCPClient *dhcp_client, int index,
 			int code, uint32_t *T1, uint32_t *T2,
 			bool add_iaaddr, const char *ia_na)
 {
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
+
 	if (code == G_DHCPV6_IA_TA) {
 		uint8_t ia_options[4];
 
@@ -1180,14 +1180,14 @@ int g_dhcp_v6_client_set_ia(GDHCPClient *dhcp_client, int index,
 		 * the address sub-option.
 		 */
 		if (add_iaaddr && ((!ia_na &&
-			!IN6_IS_ADDR_UNSPECIFIED(&dhcp_client->ia_na))
+			!IN6_IS_ADDR_UNSPECIFIED(&priv->ia_na))
 			|| (ia_na &&
 				inet_pton(AF_INET6, ia_na, &addr) == 1))) {
 #define IAADDR_LEN (16+4+4)
 			uint8_t ia_options[4+4+4+2+2+IAADDR_LEN];
 
 			if (ia_na)
-				memcpy(&dhcp_client->ia_na, &addr,
+				memcpy(&priv->ia_na, &addr,
 						sizeof(struct in6_addr));
 
 			put_iaid(dhcp_client, index, ia_options);
@@ -1319,6 +1319,7 @@ int g_dhcp_v6_client_set_oro(GDHCPClient *dhcp_client, int args, ...)
 
 static int send_dhcpv6_msg(GDHCPClient *dhcp_client, int type, char *msg)
 {
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
 	struct dhcpv6_packet *packet;
 	uint8_t buf[MAX_DHCPV6_PKT_SIZE];
 	unsigned char *ptr;
@@ -1330,21 +1331,20 @@ static int send_dhcpv6_msg(GDHCPClient *dhcp_client, int type, char *msg)
 
 	init_packet(dhcp_client, packet, type);
 
-	if (!dhcp_client->retransmit) {
-		dhcp_client->xid = packet->transaction_id[0] << 16 |
+	if (!priv->retransmit) {
+		priv->xid = packet->transaction_id[0] << 16 |
 				packet->transaction_id[1] << 8 |
 				packet->transaction_id[2];
-		gettimeofday(&dhcp_client->start_time, NULL);
+		gettimeofday(&priv->start_time, NULL);
 	} else {
-		packet->transaction_id[0] = dhcp_client->xid >> 16;
-		packet->transaction_id[1] = dhcp_client->xid >> 8 ;
-		packet->transaction_id[2] = dhcp_client->xid;
+		packet->transaction_id[0] = priv->xid >> 16;
+		packet->transaction_id[1] = priv->xid >> 8 ;
+		packet->transaction_id[2] = priv->xid;
 	}
 
 	g_dhcp_client_set_request(dhcp_client, G_DHCPV6_ELAPSED_TIME);
 
-	debug(dhcp_client, "sending DHCPv6 %s message xid 0x%04x", msg,
-							dhcp_client->xid);
+	debug(dhcp_client, "sending DHCPv6 %s message xid 0x%04x", msg, priv->xid);
 
 	max_buf = MAX_DHCPV6_PKT_SIZE - sizeof(struct dhcpv6_packet);
 
@@ -1352,7 +1352,7 @@ static int send_dhcpv6_msg(GDHCPClient *dhcp_client, int type, char *msg)
 
 	add_dhcpv6_send_options(dhcp_client, buf, max_buf, &ptr);
 
-	ret = dhcpv6_send_packet(dhcp_client->ifindex, packet, ptr - buf);
+	ret = dhcpv6_send_packet(priv->ifindex, packet, ptr - buf);
 
 	debug(dhcp_client, "sent %d pkt %p len %d", ret, packet, ptr - buf);
 	return ret;
@@ -1395,8 +1395,7 @@ static int send_dhcpv6_release(GDHCPClient *dhcp_client)
 
 static int send_information_req(GDHCPClient *dhcp_client)
 {
-	return send_dhcpv6_msg(dhcp_client, DHCPV6_INFORMATION_REQ,
-				"information-req");
+	return send_dhcpv6_msg(dhcp_client, DHCPV6_INFORMATION_REQ, "information-req");
 }
 
 static void remove_value(gpointer data, gpointer user_data)
@@ -1733,7 +1732,9 @@ static int ipv4ll_recv_arp_packet(GDHCPClient *dhcp_client)
 
 static bool check_package_owner(GDHCPClient *dhcp_client, gpointer pkt)
 {
-	if (dhcp_client->type == G_DHCP_IPV6) {
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
+
+	if (priv->type == G_DHCP_IPV6) {
 		struct dhcpv6_packet *packet6 = pkt;
 		uint32_t xid;
 
@@ -1744,18 +1745,18 @@ static bool check_package_owner(GDHCPClient *dhcp_client, gpointer pkt)
 			packet6->transaction_id[1] << 8 |
 			packet6->transaction_id[2];
 
-		if (xid != dhcp_client->xid)
+		if (xid != priv->xid)
 			return false;
 	} else {
 		struct dhcp_packet *packet = pkt;
 
-		if (packet->xid != dhcp_client->xid)
+		if (packet->xid != priv->xid)
 			return false;
 
 		if (packet->hlen != 6)
 			return false;
 
-		if (memcmp(packet->chaddr, dhcp_client->mac_address, 6))
+		if (memcmp(packet->chaddr, priv->mac_address, 6))
 			return false;
 	}
 
@@ -1767,19 +1768,18 @@ static void start_request(GDHCPClient *dhcp_client);
 static gboolean request_timeout(gpointer user_data)
 {
 	GDHCPClient *dhcp_client = user_data;
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
 
-	debug(dhcp_client, "request timeout (retries %d)",
-					dhcp_client->retry_times);
+	debug(dhcp_client, "request timeout (retries %d)", priv->retry_times);
 
-	dhcp_client->retry_times++;
+	priv->retry_times++;
 
 	start_request(dhcp_client);
 
 	return FALSE;
 }
 
-static gboolean listener_event(GIOChannel *channel, GIOCondition condition,
-							gpointer user_data);
+static gboolean listener_event(GIOChannel *channel, GIOCondition condition, gpointer user_data);
 
 static int switch_listening_mode(GDHCPClient *dhcp_client, ListenMode listen_mode)
 {
@@ -1839,22 +1839,23 @@ static int switch_listening_mode(GDHCPClient *dhcp_client, ListenMode listen_mod
 
 static void start_request(GDHCPClient *dhcp_client)
 {
-	debug(dhcp_client, "start request (retries %d)",
-					dhcp_client->retry_times);
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
 
-	if (dhcp_client->retry_times == REQUEST_RETRIES) {
+	debug(dhcp_client, "start request (retries %d)", priv->retry_times);
+
+	if (priv->retry_times == REQUEST_RETRIES) {
 		g_signal_emit (dhcp_client, signals[SIG_NO_LEASE], 0);
 		return;
 	}
 
-	if (dhcp_client->retry_times == 0) {
-		dhcp_client->state = REQUESTING;
+	if (priv->retry_times == 0) {
+		priv->state = REQUESTING;
 		switch_listening_mode(dhcp_client, L2);
 	}
 
 	send_request(dhcp_client);
 
-	dhcp_client->timeout = g_timeout_add_seconds_full(G_PRIORITY_HIGH,
+	priv->timeout = g_timeout_add_seconds_full(G_PRIORITY_HIGH,
 							REQUEST_TIMEOUT,
 							request_timeout,
 							dhcp_client,
@@ -1880,16 +1881,18 @@ static uint32_t get_lease(struct dhcp_packet *packet)
 
 static void restart_dhcp(GDHCPClient *dhcp_client, int retry_times)
 {
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
+
 	debug(dhcp_client, "restart DHCP (retries %d)", retry_times);
 
 	remove_timeouts(dhcp_client);
 
-	dhcp_client->retry_times = retry_times;
-	dhcp_client->requested_ip = 0;
-	dhcp_client->state = INIT_SELECTING;
+	priv->retry_times = retry_times;
+	priv->requested_ip = 0;
+	priv->state = INIT_SELECTING;
 	switch_listening_mode(dhcp_client, L2);
 
-	g_dhcp_client_start(dhcp_client, dhcp_client->last_address);
+	g_dhcp_client_start(dhcp_client, priv->last_address);
 }
 
 static gboolean start_expire(gpointer user_data)
@@ -1898,7 +1901,7 @@ static gboolean start_expire(gpointer user_data)
 
 	debug(dhcp_client, "lease expired");
 
-	/*remove all timeouts if they are set*/
+	/* remove all timeouts if they are set */
 	remove_timeouts(dhcp_client);
 
 	restart_dhcp(dhcp_client, 0);
@@ -1912,26 +1915,26 @@ static gboolean start_expire(gpointer user_data)
 static gboolean continue_rebound(gpointer user_data)
 {
 	GDHCPClient *dhcp_client = user_data;
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
 	uint64_t rand;
 
 	switch_listening_mode(dhcp_client, L2);
 	send_request(dhcp_client);
 
-	if (dhcp_client->t2_timeout> 0) {
-		g_source_remove(dhcp_client->t2_timeout);
-		dhcp_client->t2_timeout = 0;
+	if (priv->t2_timeout> 0) {
+		g_source_remove(priv->t2_timeout);
+		priv->t2_timeout = 0;
 	}
 
-	/*recalculate remaining rebind time*/
-	dhcp_client->T2 >>= 1;
-	if (dhcp_client->T2 > 60) {
+	/* recalculate remaining rebind time */
+	priv->T2 >>= 1;
+	if (priv->T2 > 60) {
 		dhcp_get_random(&rand);
-		dhcp_client->t2_timeout =
-			g_timeout_add_full(G_PRIORITY_HIGH,
-					dhcp_client->T2 * 1000 + (rand % 2000) - 1000,
-					continue_rebound,
-					dhcp_client,
-					NULL);
+		priv->t2_timeout = g_timeout_add_full(G_PRIORITY_HIGH,
+								priv->T2 * 1000 + (rand % 2000) - 1000,
+								continue_rebound,
+								dhcp_client,
+								NULL);
 	}
 
 	return FALSE;
@@ -1940,18 +1943,19 @@ static gboolean continue_rebound(gpointer user_data)
 static gboolean start_rebound(gpointer user_data)
 {
 	GDHCPClient *dhcp_client = user_data;
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
 
-	/*remove renew timer*/
-	if (dhcp_client->t1_timeout > 0)
-		g_source_remove(dhcp_client->t1_timeout);
+	/* remove renew timer */
+	if (priv->t1_timeout > 0)
+		g_source_remove(priv->t1_timeout);
 
 	debug(dhcp_client, "start rebound");
-	dhcp_client->state = REBINDING;
+	priv->state = REBINDING;
 
-	/*calculate total rebind time*/
-	dhcp_client->T2 = dhcp_client->expire - dhcp_client->T2;
+	/* calculate total rebind time */
+	priv->T2 = priv->expire - priv->T2;
 
-	/*send the first rebound and reschedule*/
+	/* send the first rebound and reschedule */
 	continue_rebound(user_data);
 
 	return FALSE;
@@ -1960,25 +1964,26 @@ static gboolean start_rebound(gpointer user_data)
 static gboolean continue_renew (gpointer user_data)
 {
 	GDHCPClient *dhcp_client = user_data;
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
 	uint64_t rand;
 
 	switch_listening_mode(dhcp_client, L3);
 	send_request(dhcp_client);
 
-	if (dhcp_client->t1_timeout > 0)
-		g_source_remove(dhcp_client->t1_timeout);
+	if (priv->t1_timeout > 0)
+		g_source_remove(priv->t1_timeout);
 
-	dhcp_client->t1_timeout = 0;
+	priv->t1_timeout = 0;
 
-	dhcp_client->T1 >>= 1;
+	priv->T1 >>= 1;
 
-	if (dhcp_client->T1 > 60) {
+	if (priv->T1 > 60) {
 		dhcp_get_random(&rand);
-		dhcp_client->t1_timeout = g_timeout_add_full(G_PRIORITY_HIGH,
-				dhcp_client->T1 * 1000 + (rand % 2000) - 1000,
-				continue_renew,
-				dhcp_client,
-				NULL);
+		priv->t1_timeout = g_timeout_add_full(G_PRIORITY_HIGH,
+								priv->T1 * 1000 + (rand % 2000) - 1000,
+								continue_renew,
+								dhcp_client,
+								NULL);
 	}
 
 	return FALSE;
@@ -1986,14 +1991,15 @@ static gboolean continue_renew (gpointer user_data)
 static gboolean start_renew(gpointer user_data)
 {
 	GDHCPClient *dhcp_client = user_data;
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
 
 	debug(dhcp_client, "start renew");
-	dhcp_client->state = RENEWING;
+	priv->state = RENEWING;
 
-	/*calculate total renew period*/
-	dhcp_client->T1 = dhcp_client->T2 - dhcp_client->T1;
+	/* calculate total renew period */
+	priv->T1 = priv->T2 - priv->T1;
 
-	/*send first renew and reschedule for half the remaining time.*/
+	/* send first renew and reschedule for half the remaining time */
 	continue_renew(user_data);
 
 	return FALSE;
@@ -2001,9 +2007,11 @@ static gboolean start_renew(gpointer user_data)
 
 static void start_bound(GDHCPClient *dhcp_client)
 {
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
+
 	debug(dhcp_client, "start bound");
 
-	dhcp_client->state = BOUND;
+	priv->state = BOUND;
 
 	remove_timeouts(dhcp_client);
 
@@ -2012,39 +2020,40 @@ static void start_bound(GDHCPClient *dhcp_client)
 	 * defaults as they are here.
 	 */
 
-	dhcp_client->T1 = dhcp_client->lease_seconds >> 1;
-	dhcp_client->T2 = dhcp_client->lease_seconds * 0.875;
-	dhcp_client->expire = dhcp_client->lease_seconds;
+	priv->T1 = priv->lease_seconds >> 1;
+	priv->T2 = priv->lease_seconds * 0.875;
+	priv->expire = priv->lease_seconds;
 
-	dhcp_client->t1_timeout = g_timeout_add_seconds_full(G_PRIORITY_HIGH,
-					dhcp_client->T1,
-					start_renew, dhcp_client,
+	priv->t1_timeout = g_timeout_add_seconds_full(G_PRIORITY_HIGH,
+							priv->T1,
+							start_renew, dhcp_client,
 							NULL);
 
-	dhcp_client->t2_timeout = g_timeout_add_seconds_full(G_PRIORITY_HIGH,
-					dhcp_client->T2,
-					start_rebound, dhcp_client,
+	priv->t2_timeout = g_timeout_add_seconds_full(G_PRIORITY_HIGH,
+							priv->T2,
+							start_rebound, dhcp_client,
 							NULL);
 
-	dhcp_client->lease_timeout= g_timeout_add_seconds_full(G_PRIORITY_HIGH,
-					dhcp_client->expire,
-					start_expire, dhcp_client,
+	priv->lease_timeout= g_timeout_add_seconds_full(G_PRIORITY_HIGH,
+							priv->expire,
+							start_expire, dhcp_client,
 							NULL);
 }
 
 static gboolean restart_dhcp_timeout(gpointer user_data)
 {
 	GDHCPClient *dhcp_client = user_data;
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
 
 	debug(dhcp_client, "restart DHCP timeout");
 
-	if (dhcp_client->state == REBOOTING) {
-		g_free(dhcp_client->last_address);
-		dhcp_client->last_address = NULL;
+	if (priv->state == REBOOTING) {
+		g_free(priv->last_address);
+		priv->last_address = NULL;
 		restart_dhcp(dhcp_client, 0);
 	} else {
-		dhcp_client->ack_retry_times++;
-		restart_dhcp(dhcp_client, dhcp_client->ack_retry_times);
+		priv->ack_retry_times++;
+		restart_dhcp(dhcp_client, priv->ack_retry_times);
 	}
 	return FALSE;
 }
@@ -2189,6 +2198,7 @@ static GList *get_addresses(GDHCPClient *dhcp_client,
 				unsigned char *value,
 				uint16_t *status)
 {
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
 	GList *list = NULL;
 	struct in6_addr addr;
 	uint32_t iaid, T1 = 0, T2 = 0, preferred = 0, valid = 0;
@@ -2203,7 +2213,7 @@ static GList *get_addresses(GDHCPClient *dhcp_client,
 		return NULL;
 
 	iaid = get_uint32(&value[0]);
-	if (dhcp_client->iaid != iaid)
+	if (priv->iaid != iaid)
 		return NULL;
 
 	if (code == G_DHCPV6_IA_NA || code == G_DHCPV6_IA_PD) {
@@ -2296,8 +2306,8 @@ static GList *get_addresses(GDHCPClient *dhcp_client,
 			/* RFC 3315, 22.6 */
 			return NULL;
 
-		dhcp_client->T1 = T1;
-		dhcp_client->T2 = T2;
+		priv->T1 = T1;
+		priv->T2 = T2;
 
 		inet_ntop(AF_INET6, &addr, addr_str, INET6_ADDRSTRLEN);
 		debug(dhcp_client, "address count %d addr %s T1 %u T2 %u",
@@ -2306,12 +2316,12 @@ static GList *get_addresses(GDHCPClient *dhcp_client,
 		list = g_list_append(list, g_strdup(addr_str));
 
 		if (code == G_DHCPV6_IA_NA)
-			memcpy(&dhcp_client->ia_na, &addr, sizeof(struct in6_addr));
+			memcpy(&priv->ia_na, &addr, sizeof(struct in6_addr));
 		else
-			memcpy(&dhcp_client->ia_ta, &addr, sizeof(struct in6_addr));
+			memcpy(&priv->ia_ta, &addr, sizeof(struct in6_addr));
 
-		if (valid != dhcp_client->expire)
-			dhcp_client->expire = valid;
+		if (valid != priv->expire)
+			priv->expire = valid;
 	}
 
 	if (prefix_count > 0 && list) {
@@ -2322,10 +2332,10 @@ static GList *get_addresses(GDHCPClient *dhcp_client,
 
 		debug(dhcp_client, "prefix count %d T1 %u T2 %u", prefix_count, T1, T2);
 
-		dhcp_client->T1 = T1;
-		dhcp_client->T2 = T2;
+		priv->T1 = T1;
+		priv->T2 = T2;
 
-		dhcp_client->expire = shortest_valid;
+		priv->expire = shortest_valid;
 	}
 
 	if (status && *status != 0)
@@ -2418,18 +2428,19 @@ static void get_dhcpv6_request(GDHCPClient *dhcp_client,
 				struct dhcpv6_packet *packet,
 				uint16_t pkt_len, uint16_t *status)
 {
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
 	GList *list, *value_list;
 	uint8_t *option;
 	uint16_t code;
 	uint16_t option_len;
 
-	for (list = dhcp_client->request_list; list; list = list->next) {
+	for (list = priv->request_list; list; list = list->next) {
 		code = (uint16_t) GPOINTER_TO_INT(list->data);
 
 		option = dhcpv6_get_option(packet, pkt_len, code, &option_len,
 						NULL);
 		if (!option) {
-			g_hash_table_remove(dhcp_client->code_value_hash,
+			g_hash_table_remove(priv->code_value_hash,
 						GINT_TO_POINTER((int) code));
 			continue;
 		}
@@ -2441,28 +2452,29 @@ static void get_dhcpv6_request(GDHCPClient *dhcp_client,
 			option_len, value_list);
 
 		if (!value_list)
-			g_hash_table_remove(dhcp_client->code_value_hash,
+			g_hash_table_remove(priv->code_value_hash,
 						GINT_TO_POINTER((int) code));
 		else
-			g_hash_table_insert(dhcp_client->code_value_hash,
+			g_hash_table_insert(priv->code_value_hash,
 				GINT_TO_POINTER((int) code), value_list);
 	}
 }
 
 static void get_request(GDHCPClient *dhcp_client, struct dhcp_packet *packet)
 {
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
 	GDHCPOptionType type;
 	GList *list, *value_list;
 	char *option_value;
 	uint8_t *option;
 	uint8_t code;
 
-	for (list = dhcp_client->request_list; list; list = list->next) {
+	for (list = priv->request_list; list; list = list->next) {
 		code = (uint8_t) GPOINTER_TO_INT(list->data);
 
 		option = dhcp_get_option(packet, code);
 		if (!option) {
-			g_hash_table_remove(dhcp_client->code_value_hash,
+			g_hash_table_remove(priv->code_value_hash,
 						GINT_TO_POINTER((int) code));
 			continue;
 		}
@@ -2471,7 +2483,7 @@ static void get_request(GDHCPClient *dhcp_client, struct dhcp_packet *packet)
 
 		option_value = malloc_option_value_string(option, type);
 		if (!option_value)
-			g_hash_table_remove(dhcp_client->code_value_hash,
+			g_hash_table_remove(priv->code_value_hash,
 						GINT_TO_POINTER((int) code));
 
 		value_list = get_option_value_list(option_value, type);
@@ -2479,18 +2491,18 @@ static void get_request(GDHCPClient *dhcp_client, struct dhcp_packet *packet)
 		g_free(option_value);
 
 		if (!value_list)
-			g_hash_table_remove(dhcp_client->code_value_hash,
+			g_hash_table_remove(priv->code_value_hash,
 						GINT_TO_POINTER((int) code));
 		else
-			g_hash_table_insert(dhcp_client->code_value_hash,
+			g_hash_table_insert(priv->code_value_hash,
 				GINT_TO_POINTER((int) code), value_list);
 	}
 }
 
-static gboolean listener_event(GIOChannel *channel, GIOCondition condition,
-							gpointer user_data)
+static gboolean listener_event(GIOChannel *channel, GIOCondition condition, gpointer user_data)
 {
 	GDHCPClient *dhcp_client = user_data;
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
 	struct sockaddr_in dst_addr = { 0 };
 	struct dhcp_packet packet;
 	struct dhcpv6_packet *packet6 = NULL;
@@ -2505,26 +2517,26 @@ static gboolean listener_event(GIOChannel *channel, GIOCondition condition,
 	int re;
 
 	if (condition & (G_IO_NVAL | G_IO_ERR | G_IO_HUP)) {
-		dhcp_client->listener_watch = 0;
+		priv->listener_watch = 0;
 		return FALSE;
 	}
 
-	if (dhcp_client->listen_mode == L_NONE)
+	if (priv->listen_mode == L_NONE)
 		return FALSE;
 
 	pkt = &packet;
 
-	dhcp_client->status_code = 0;
+	priv->status_code = 0;
 
-	if (dhcp_client->listen_mode == L2) {
+	if (priv->listen_mode == L2) {
 		re = dhcp_recv_l2_packet(&packet,
-					dhcp_client->listener_sockfd,
+					priv->listener_sockfd,
 					&dst_addr);
 		xid = packet.xid;
-	} else if (dhcp_client->listen_mode == L3) {
-		if (dhcp_client->type == G_DHCP_IPV6) {
+	} else if (priv->listen_mode == L3) {
+		if (priv->type == G_DHCP_IPV6) {
 			re = dhcpv6_recv_l3_packet(&packet6, buf, sizeof(buf),
-						dhcp_client->listener_sockfd);
+						priv->listener_sockfd);
 			if (re < 0)
 			    return TRUE;
 			pkt_len = re;
@@ -2534,10 +2546,10 @@ static gboolean listener_event(GIOChannel *channel, GIOCondition condition,
 				packet6->transaction_id[2];
 		} else {
 			re = dhcp_recv_l3_packet(&packet,
-						dhcp_client->listener_sockfd);
+						priv->listener_sockfd);
 			xid = packet.xid;
 		}
-	} else if (dhcp_client->listen_mode == L_ARP) {
+	} else if (priv->listen_mode == L_ARP) {
 		ipv4ll_recv_arp_packet(dhcp_client);
 		return TRUE;
 	} else
@@ -2549,7 +2561,7 @@ static gboolean listener_event(GIOChannel *channel, GIOCondition condition,
 	if (!check_package_owner(dhcp_client, pkt))
 		return TRUE;
 
-	if (dhcp_client->type == G_DHCP_IPV6) {
+	if (priv->type == G_DHCP_IPV6) {
 		if (!packet6)
 			return TRUE;
 
@@ -2558,8 +2570,8 @@ static gboolean listener_event(GIOChannel *channel, GIOCondition condition,
 				G_DHCPV6_CLIENTID, &option_len,	&count);
 
 		if (!client_id || count == 0 || option_len == 0 ||
-				memcmp(dhcp_client->duid, client_id,
-					dhcp_client->duid_len) != 0) {
+				memcmp(priv->duid, client_id,
+					priv->duid_len) != 0) {
 			debug(dhcp_client,
 				"client duid error, discarding msg %p/%d/%d",
 				client_id, option_len, count);
@@ -2576,12 +2588,11 @@ static gboolean listener_event(GIOChannel *channel, GIOCondition condition,
 					gchar *txt = g_strndup(
 						(gchar *)&option[2],
 						option_len - 2);
-					debug(dhcp_client, "error text: %s",
-						txt);
+					debug(dhcp_client, "error text: %s", txt);
 					g_free(txt);
 				}
 			}
-			dhcp_client->status_code = status;
+			priv->status_code = status;
 		}
 	} else {
 		message_type = dhcp_get_option(&packet, DHCP_MESSAGE_TYPE);
@@ -2590,251 +2601,249 @@ static gboolean listener_event(GIOChannel *channel, GIOCondition condition,
 	}
 
 	debug(dhcp_client, "received DHCP packet xid 0x%04x "
-		"(current state %d)", ntohl(xid), dhcp_client->state);
+		"(current state %d)", ntohl(xid), priv->state);
 
-	switch (dhcp_client->state) {
-	case INIT_SELECTING:
-		if (*message_type != DHCPOFFER)
-			return TRUE;
-
-		remove_timeouts(dhcp_client);
-		dhcp_client->timeout = 0;
-		dhcp_client->retry_times = 0;
-
-		option = dhcp_get_option(&packet, DHCP_SERVER_ID);
-		dhcp_client->server_ip = get_be32(option);
-		dhcp_client->requested_ip = ntohl(packet.yiaddr);
-
-		dhcp_client->state = REQUESTING;
-
-		if (dst_addr.sin_addr.s_addr == INADDR_BROADCAST)
-			dhcp_client->request_bcast = true;
-		else
-			dhcp_client->request_bcast = false;
-
-		debug(dhcp_client, "init ip %s -> %sadding broadcast flag",
-			inet_ntoa(dst_addr.sin_addr),
-			dhcp_client->request_bcast ? "" : "not ");
-
-		start_request(dhcp_client);
-
-		return TRUE;
-	case REBOOTING:
-		if (dst_addr.sin_addr.s_addr == INADDR_BROADCAST)
-			dhcp_client->request_bcast = true;
-		else
-			dhcp_client->request_bcast = false;
-
-		debug(dhcp_client, "ip %s -> %sadding broadcast flag",
-			inet_ntoa(dst_addr.sin_addr),
-			dhcp_client->request_bcast ? "" : "not ");
-		/* fall through */
-	case REQUESTING:
-	case RENEWING:
-	case REBINDING:
-		if (*message_type == DHCPACK) {
-			dhcp_client->retry_times = 0;
+	switch (priv->state) {
+		case INIT_SELECTING:
+			if (*message_type != DHCPOFFER)
+				return TRUE;
 
 			remove_timeouts(dhcp_client);
+			priv->timeout = 0;
+			priv->retry_times = 0;
 
-			dhcp_client->lease_seconds = get_lease(&packet);
+			option = dhcp_get_option(&packet, DHCP_SERVER_ID);
+			priv->server_ip = get_be32(option);
+			priv->requested_ip = ntohl(packet.yiaddr);
 
-			get_request(dhcp_client, &packet);
+			priv->state = REQUESTING;
 
-			switch_listening_mode(dhcp_client, L_NONE);
+			if (dst_addr.sin_addr.s_addr == INADDR_BROADCAST)
+				priv->request_bcast = true;
+			else
+				priv->request_bcast = false;
 
-			g_free(dhcp_client->assigned_ip);
-			dhcp_client->assigned_ip = get_ip(packet.yiaddr);
+			debug(dhcp_client, "init ip %s -> %sadding broadcast flag",
+				inet_ntoa(dst_addr.sin_addr),
+				priv->request_bcast ? "" : "not ");
 
-			if (dhcp_client->state == REBOOTING) {
-				option = dhcp_get_option(&packet,
-							DHCP_SERVER_ID);
-				dhcp_client->server_ip = get_be32(option);
+			start_request(dhcp_client);
+
+			return TRUE;
+		case REBOOTING:
+			if (dst_addr.sin_addr.s_addr == INADDR_BROADCAST)
+				priv->request_bcast = true;
+			else
+				priv->request_bcast = false;
+
+			debug(dhcp_client, "ip %s -> %sadding broadcast flag",
+				inet_ntoa(dst_addr.sin_addr),
+				priv->request_bcast ? "" : "not ");
+			/* fall through */
+		case REQUESTING:
+		case RENEWING:
+		case REBINDING:
+			if (*message_type == DHCPACK) {
+				priv->retry_times = 0;
+
+				remove_timeouts(dhcp_client);
+
+				priv->lease_seconds = get_lease(&packet);
+
+				get_request(dhcp_client, &packet);
+
+				switch_listening_mode(dhcp_client, L_NONE);
+
+				g_free(priv->assigned_ip);
+				priv->assigned_ip = get_ip(packet.yiaddr);
+
+				if (priv->state == REBOOTING) {
+					option = dhcp_get_option(&packet,
+								DHCP_SERVER_ID);
+					priv->server_ip = get_be32(option);
+				}
+
+				/* Address should be set up here */
+				g_signal_emit (dhcp_client, signals[SIG_LEASE_AVAILABLE], 0);
+
+				start_bound(dhcp_client);
+			} else if (*message_type == DHCPNAK) {
+				priv->retry_times = 0;
+
+				remove_timeouts(dhcp_client);
+
+				priv->timeout = g_timeout_add_seconds_full(
+									G_PRIORITY_HIGH, 3,
+									restart_dhcp_timeout,
+									dhcp_client,
+									NULL);
 			}
 
-			/* Address should be set up here */
-			g_signal_emit (dhcp_client, signals[SIG_LEASE_AVAILABLE], 0);
-
-			start_bound(dhcp_client);
-		} else if (*message_type == DHCPNAK) {
-			dhcp_client->retry_times = 0;
-
-			remove_timeouts(dhcp_client);
-
-			dhcp_client->timeout = g_timeout_add_seconds_full(
-							G_PRIORITY_HIGH, 3,
-							restart_dhcp_timeout,
-							dhcp_client,
-							NULL);
-		}
-
-		break;
-	case SOLICITATION:
-		if (dhcp_client->type != G_DHCP_IPV6)
-			return TRUE;
-
-		if (packet6->message != DHCPV6_REPLY &&
-				packet6->message != DHCPV6_ADVERTISE)
-			return TRUE;
-
-		count = 0;
-		server_id = dhcpv6_get_option(packet6, pkt_len,
-				G_DHCPV6_SERVERID, &option_len,	&count);
-		if (!server_id || count != 1 || option_len == 0) {
-			/* RFC 3315, 15.10 */
-			debug(dhcp_client,
-				"server duid error, discarding msg %p/%d/%d",
-				server_id, option_len, count);
-			return TRUE;
-		}
-		dhcp_client->server_duid = g_try_malloc(option_len);
-		if (!dhcp_client->server_duid)
-			return TRUE;
-		memcpy(dhcp_client->server_duid, server_id, option_len);
-		dhcp_client->server_duid_len = option_len;
-
-		if (packet6->message == DHCPV6_REPLY) {
-			uint8_t *rapid_commit;
-			count = 0;
-			option_len = 0;
-			rapid_commit = dhcpv6_get_option(packet6, pkt_len,
-							G_DHCPV6_RAPID_COMMIT,
-							&option_len, &count);
-			if (!rapid_commit || option_len != 0 ||
-								count != 1)
-				/* RFC 3315, 17.1.4 */
+			break;
+		case SOLICITATION:
+			if (priv->type != G_DHCP_IPV6)
 				return TRUE;
-		}
 
-		switch_listening_mode(dhcp_client, L_NONE);
-
-		if (dhcp_client->status_code == 0)
-			get_dhcpv6_request(dhcp_client, packet6, pkt_len,
-					&dhcp_client->status_code);
-
-		if (packet6->message == DHCPV6_ADVERTISE) {
-			g_signal_emit (dhcp_client, signals[SIG_ADVERTISE], 0);
-			return TRUE;
-		}
-
-		if (g_signal_has_handler_pending (dhcp_client, signals[SIG_SOLICITATION], 0, FALSE)) {
-			/*
-			 * The dhcp_client might not be valid after the
-			 * callback call so just return immediately.
-			 */
-			g_signal_emit (dhcp_client, signals[SIG_SOLICITATION], 0);
-			return TRUE;
-		}
-		break;
-	case REBIND:
-		if (dhcp_client->type != G_DHCP_IPV6)
-			return TRUE;
-
-		server_id = dhcpv6_get_option(packet6, pkt_len,
-				G_DHCPV6_SERVERID, &option_len,	&count);
-		if (!dhcp_client->server_duid && server_id &&
-								count == 1) {
-			/*
-			 * If we do not have server duid yet, then get it now.
-			 * Prefix delegation renew support needs it.
-			 */
-			dhcp_client->server_duid = g_try_malloc(option_len);
-			if (!dhcp_client->server_duid)
+			if (packet6->message != DHCPV6_REPLY &&
+					packet6->message != DHCPV6_ADVERTISE)
 				return TRUE;
-			memcpy(dhcp_client->server_duid, server_id, option_len);
-			dhcp_client->server_duid_len = option_len;
-		}
-		/* fall through */
-	case INFORMATION_REQ:
-	case REQUEST:
-	case RENEW:
-	case RELEASE:
-	case CONFIRM:
-	case DECLINE:
-		if (dhcp_client->type != G_DHCP_IPV6)
-			return TRUE;
 
-		if (packet6->message != DHCPV6_REPLY)
-			return TRUE;
-
-		count = 0;
-		option_len = 0;
-		server_id = dhcpv6_get_option(packet6, pkt_len,
-				G_DHCPV6_SERVERID, &option_len, &count);
-		if (!server_id || count != 1 || option_len == 0 ||
-				(dhcp_client->server_duid_len > 0 &&
-				memcmp(dhcp_client->server_duid, server_id,
-					dhcp_client->server_duid_len) != 0)) {
-			/* RFC 3315, 15.10 */
-			debug(dhcp_client,
-				"server duid error, discarding msg %p/%d/%d",
-				server_id, option_len, count);
-			return TRUE;
-		}
-
-		switch_listening_mode(dhcp_client, L_NONE);
-
-		get_dhcpv6_request(dhcp_client, packet6, pkt_len,
-						&dhcp_client->status_code);
-
-		if (g_signal_has_handler_pending (dhcp_client, signals[SIG_INFORMATION_REQ], 0, FALSE)) {
-			/*
-			 * The dhcp_client might not be valid after the
-			 * callback call so just return immediately.
-			 */
-			g_signal_emit (dhcp_client, signals[SIG_INFORMATION_REQ], 0);
-			return TRUE;
-		}
-		if (g_signal_has_handler_pending (dhcp_client, signals[SIG_REQUEST], 0, FALSE)) {
-			g_signal_emit (dhcp_client, signals[SIG_REQUEST], 0);
-			return TRUE;
-		}
-		if (g_signal_has_handler_pending (dhcp_client, signals[SIG_RENEW], 0, FALSE)) {
-			g_signal_emit (dhcp_client, signals[SIG_RENEW], 0);
-			return TRUE;
-		}
-		if (g_signal_has_handler_pending (dhcp_client, signals[SIG_REBIND], 0, FALSE)) {
-			g_signal_emit (dhcp_client, signals[SIG_REBIND], 0);
-			return TRUE;
-		}
-		if (g_signal_has_handler_pending (dhcp_client, signals[SIG_RELEASE], 0, FALSE)) {
-			g_signal_emit (dhcp_client, signals[SIG_RELEASE], 0);
-			return TRUE;
-		}
-		if (g_signal_has_handler_pending (dhcp_client, signals[SIG_DECLINE], 0, FALSE)) {
-			g_signal_emit (dhcp_client, signals[SIG_DECLINE], 0);
-			return TRUE;
-		}
-		if (g_signal_has_handler_pending (dhcp_client, signals[SIG_CONFIRM], 0, FALSE)) {
 			count = 0;
 			server_id = dhcpv6_get_option(packet6, pkt_len,
-						G_DHCPV6_SERVERID, &option_len,
-						&count);
-			if (!server_id || count != 1 ||
-							option_len == 0) {
+					G_DHCPV6_SERVERID, &option_len,	&count);
+			if (!server_id || count != 1 || option_len == 0) {
 				/* RFC 3315, 15.10 */
 				debug(dhcp_client,
-					"confirm server duid error, "
-					"discarding msg %p/%d/%d",
+					"server duid error, discarding msg %p/%d/%d",
 					server_id, option_len, count);
 				return TRUE;
 			}
-			dhcp_client->server_duid = g_try_malloc(option_len);
-			if (!dhcp_client->server_duid)
+			priv->server_duid = g_try_malloc(option_len);
+			if (!priv->server_duid)
 				return TRUE;
-			memcpy(dhcp_client->server_duid, server_id, option_len);
-			dhcp_client->server_duid_len = option_len;
+			memcpy(priv->server_duid, server_id, option_len);
+			priv->server_duid_len = option_len;
 
-			g_signal_emit (dhcp_client, signals[SIG_CONFIRM], 0);
-			return TRUE;
-		}
-		break;
-	default:
-		break;
+			if (packet6->message == DHCPV6_REPLY) {
+				uint8_t *rapid_commit;
+				count = 0;
+				option_len = 0;
+				rapid_commit = dhcpv6_get_option(packet6, pkt_len,
+								G_DHCPV6_RAPID_COMMIT,
+								&option_len, &count);
+				if (!rapid_commit || option_len != 0 ||
+									count != 1)
+					/* RFC 3315, 17.1.4 */
+					return TRUE;
+			}
+
+			switch_listening_mode(dhcp_client, L_NONE);
+
+			if (priv->status_code == 0)
+				get_dhcpv6_request(dhcp_client, packet6, pkt_len,
+						&priv->status_code);
+
+			if (packet6->message == DHCPV6_ADVERTISE) {
+				g_signal_emit (dhcp_client, signals[SIG_ADVERTISE], 0);
+				return TRUE;
+			}
+
+			if (g_signal_has_handler_pending (dhcp_client, signals[SIG_SOLICITATION], 0, FALSE)) {
+				/*
+				* The dhcp_client might not be valid after the
+				* callback call so just return immediately.
+				*/
+				g_signal_emit (dhcp_client, signals[SIG_SOLICITATION], 0);
+				return TRUE;
+			}
+			break;
+		case REBIND:
+			if (priv->type != G_DHCP_IPV6)
+				return TRUE;
+
+			server_id = dhcpv6_get_option(packet6, pkt_len,
+					G_DHCPV6_SERVERID, &option_len,	&count);
+			if (!priv->server_duid && server_id &&
+									count == 1) {
+				/*
+				* If we do not have server duid yet, then get it now.
+				* Prefix delegation renew support needs it.
+				*/
+				priv->server_duid = g_try_malloc(option_len);
+				if (!priv->server_duid)
+					return TRUE;
+				memcpy(priv->server_duid, server_id, option_len);
+				priv->server_duid_len = option_len;
+			}
+			/* fall through */
+		case INFORMATION_REQ:
+		case REQUEST:
+		case RENEW:
+		case RELEASE:
+		case CONFIRM:
+		case DECLINE:
+			if (priv->type != G_DHCP_IPV6)
+				return TRUE;
+
+			if (packet6->message != DHCPV6_REPLY)
+				return TRUE;
+
+			count = 0;
+			option_len = 0;
+			server_id = dhcpv6_get_option(packet6, pkt_len,
+					G_DHCPV6_SERVERID, &option_len, &count);
+			if (!server_id || count != 1 || option_len == 0 ||
+					(priv->server_duid_len > 0 &&
+					memcmp(priv->server_duid, server_id,
+						priv->server_duid_len) != 0)) {
+				/* RFC 3315, 15.10 */
+				debug(dhcp_client,
+					"server duid error, discarding msg %p/%d/%d",
+					server_id, option_len, count);
+				return TRUE;
+			}
+
+			switch_listening_mode(dhcp_client, L_NONE);
+
+			get_dhcpv6_request(dhcp_client, packet6, pkt_len, &priv->status_code);
+
+			if (g_signal_has_handler_pending (dhcp_client, signals[SIG_INFORMATION_REQ], 0, FALSE)) {
+				/*
+				* The dhcp_client might not be valid after the
+				* callback call so just return immediately.
+				*/
+				g_signal_emit (dhcp_client, signals[SIG_INFORMATION_REQ], 0);
+				return TRUE;
+			}
+			if (g_signal_has_handler_pending (dhcp_client, signals[SIG_REQUEST], 0, FALSE)) {
+				g_signal_emit (dhcp_client, signals[SIG_REQUEST], 0);
+				return TRUE;
+			}
+			if (g_signal_has_handler_pending (dhcp_client, signals[SIG_RENEW], 0, FALSE)) {
+				g_signal_emit (dhcp_client, signals[SIG_RENEW], 0);
+				return TRUE;
+			}
+			if (g_signal_has_handler_pending (dhcp_client, signals[SIG_REBIND], 0, FALSE)) {
+				g_signal_emit (dhcp_client, signals[SIG_REBIND], 0);
+				return TRUE;
+			}
+			if (g_signal_has_handler_pending (dhcp_client, signals[SIG_RELEASE], 0, FALSE)) {
+				g_signal_emit (dhcp_client, signals[SIG_RELEASE], 0);
+				return TRUE;
+			}
+			if (g_signal_has_handler_pending (dhcp_client, signals[SIG_DECLINE], 0, FALSE)) {
+				g_signal_emit (dhcp_client, signals[SIG_DECLINE], 0);
+				return TRUE;
+			}
+			if (g_signal_has_handler_pending (dhcp_client, signals[SIG_CONFIRM], 0, FALSE)) {
+				count = 0;
+				server_id = dhcpv6_get_option(packet6, pkt_len,
+							G_DHCPV6_SERVERID, &option_len,
+							&count);
+				if (!server_id || count != 1 ||
+								option_len == 0) {
+					/* RFC 3315, 15.10 */
+					debug(dhcp_client,
+						"confirm server duid error, "
+						"discarding msg %p/%d/%d",
+						server_id, option_len, count);
+					return TRUE;
+				}
+				priv->server_duid = g_try_malloc(option_len);
+				if (!priv->server_duid)
+					return TRUE;
+				memcpy(priv->server_duid, server_id, option_len);
+				priv->server_duid_len = option_len;
+
+				g_signal_emit (dhcp_client, signals[SIG_CONFIRM], 0);
+				return TRUE;
+			}
+			break;
+		default:
+			break;
 	}
 
-	debug(dhcp_client, "processed DHCP packet (new state %d)",
-							dhcp_client->state);
+	debug(dhcp_client, "processed DHCP packet (new state %d)", priv->state);
 
 	return TRUE;
 }
@@ -3127,8 +3136,7 @@ void g_dhcp_client_stop(GDHCPClient *dhcp_client)
 	priv->request_bcast = false;
 }
 
-GList *g_dhcp_client_get_option(GDHCPClient *dhcp_client,
-					unsigned char option_code)
+GList *g_dhcp_client_get_option(GDHCPClient *dhcp_client, unsigned char option_code)
 {
 	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
 
@@ -3194,24 +3202,29 @@ char *g_dhcp_client_get_netmask(GDHCPClient *dhcp_client)
 GDHCPClientError g_dhcp_client_set_request(GDHCPClient *dhcp_client,
 						unsigned int option_code)
 {
-	if (!g_list_find(dhcp_client->request_list,
-				GINT_TO_POINTER((int)option_code)))
-		dhcp_client->request_list = g_list_prepend(
-					dhcp_client->request_list,
-					(GINT_TO_POINTER((int) option_code)));
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
+
+	if (!g_list_find(priv->request_list, GINT_TO_POINTER((int)option_code)))
+		priv->request_list = g_list_prepend(
+								priv->request_list,
+								(GINT_TO_POINTER((int) option_code)));
 
 	return G_DHCP_CLIENT_ERROR_NONE;
 }
 
 void g_dhcp_client_clear_requests(GDHCPClient *dhcp_client)
 {
-	g_list_free(dhcp_client->request_list);
-	dhcp_client->request_list = NULL;
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
+
+	g_list_free(priv->request_list);
+	priv->request_list = NULL;
 }
 
 void g_dhcp_client_clear_values(GDHCPClient *dhcp_client)
 {
-	g_hash_table_remove_all(dhcp_client->send_value_hash);
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
+
+	g_hash_table_remove_all(priv->send_value_hash);
 }
 
 static uint8_t *alloc_dhcp_option(int code, const uint8_t *data, unsigned size)
@@ -3242,6 +3255,7 @@ static uint8_t *alloc_dhcp_string_option(int code, const char *str)
 
 GDHCPClientError g_dhcp_client_set_id(GDHCPClient *dhcp_client)
 {
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
 	const unsigned maclen = 6;
 	const unsigned idlen = maclen + 1;
 	const uint8_t option_code = G_DHCP_CLIENT_ID;
@@ -3250,14 +3264,13 @@ GDHCPClientError g_dhcp_client_set_id(GDHCPClient *dhcp_client)
 
 	idbuf[0] = ARPHRD_ETHER;
 
-	memcpy(&idbuf[1], dhcp_client->mac_address, maclen);
+	memcpy(&idbuf[1], priv->mac_address, maclen);
 
 	data_option = alloc_dhcp_data_option(option_code, idbuf, idlen);
 	if (!data_option)
 		return G_DHCP_CLIENT_ERROR_NOMEM;
 
-	g_hash_table_insert(dhcp_client->send_value_hash,
-		GINT_TO_POINTER((int) option_code), data_option);
+	g_hash_table_insert(priv->send_value_hash, GINT_TO_POINTER((int) option_code), data_option);
 
 	return G_DHCP_CLIENT_ERROR_NONE;
 }
@@ -3266,6 +3279,7 @@ GDHCPClientError g_dhcp_client_set_id(GDHCPClient *dhcp_client)
 GDHCPClientError g_dhcp_client_set_send(GDHCPClient *dhcp_client,
 		unsigned char option_code, const char *option_value)
 {
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
 	uint8_t *binary_option;
 
 	if ((option_code == G_DHCP_HOST_NAME ||
@@ -3275,15 +3289,14 @@ GDHCPClientError g_dhcp_client_set_send(GDHCPClient *dhcp_client,
 		if (!binary_option)
 			return G_DHCP_CLIENT_ERROR_NOMEM;
 
-		g_hash_table_insert(dhcp_client->send_value_hash,
+		g_hash_table_insert(priv->send_value_hash,
 			GINT_TO_POINTER((int) option_code), binary_option);
 	}
 
 	return G_DHCP_CLIENT_ERROR_NONE;
 }
 
-static uint8_t *alloc_dhcpv6_option(uint16_t code, uint8_t *option,
-				uint16_t len)
+static uint8_t *alloc_dhcpv6_option(uint16_t code, uint8_t *option, uint16_t len)
 {
 	uint8_t *storage;
 
@@ -3302,8 +3315,8 @@ static uint8_t *alloc_dhcpv6_option(uint16_t code, uint8_t *option,
 
 gboolean g_dhcp_v6_client_clear_send(GDHCPClient *dhcp_client, uint16_t code)
 {
-	return g_hash_table_remove(dhcp_client->send_value_hash,
-				GINT_TO_POINTER((int)code));
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
+	return g_hash_table_remove(priv->send_value_hash, GINT_TO_POINTER((int)code));
 }
 
 void g_dhcp_v6_client_set_send(GDHCPClient *dhcp_client,
@@ -3311,6 +3324,8 @@ void g_dhcp_v6_client_set_send(GDHCPClient *dhcp_client,
 					uint8_t *option_value,
 					uint16_t option_len)
 {
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
+
 	if (option_value) {
 		uint8_t *binary_option;
 
@@ -3320,7 +3335,7 @@ void g_dhcp_v6_client_set_send(GDHCPClient *dhcp_client,
 		binary_option = alloc_dhcpv6_option(option_code, option_value,
 						option_len);
 		if (binary_option)
-			g_hash_table_insert(dhcp_client->send_value_hash,
+			g_hash_table_insert(priv->send_value_hash,
 					GINT_TO_POINTER((int) option_code),
 					binary_option);
 	}
@@ -3328,18 +3343,20 @@ void g_dhcp_v6_client_set_send(GDHCPClient *dhcp_client,
 
 void g_dhcp_v6_client_reset_request(GDHCPClient *dhcp_client)
 {
-	if (!dhcp_client || dhcp_client->type != G_DHCP_IPV6)
-		return;
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
 
-	dhcp_client->last_request = time(NULL);
+	g_assert(priv->type == G_DHCP_IPV6);
+
+	priv->last_request = time(NULL);
 }
 
 uint16_t g_dhcp_v6_client_get_status(GDHCPClient *dhcp_client)
 {
-	if (!dhcp_client || dhcp_client->type != G_DHCP_IPV6)
-		return 0;
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
 
-	return dhcp_client->status_code;
+	g_assert(priv->type == G_DHCP_IPV6);
+
+	return priv->status_code;
 }
 
 static GDHCPIAPrefix *copy_prefix(gpointer data)
