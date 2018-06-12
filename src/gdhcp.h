@@ -136,98 +136,98 @@ typedef struct {
 } GDHCPIAPrefix;
 
 GDHCP_EXTERN
-GDHCPClient *g_dhcp_client_new(GDHCPType type, int index, GError **error);
+GDHCPClient *gdhcp_client_new(GDHCPType type, int index, GError **error);
 
 GDHCP_EXTERN
-int g_dhcp_client_start(GDHCPClient *client, const char *last_address);
+int gdhcp_client_start(GDHCPClient *client, const char *last_address);
 
 GDHCP_EXTERN
-void g_dhcp_client_stop(GDHCPClient *client);
+void gdhcp_client_stop(GDHCPClient *client);
 
 GDHCP_EXTERN
-void g_dhcp_client_set_request(GDHCPClient *client, unsigned int option_code);
+void gdhcp_client_set_request(GDHCPClient *client, unsigned int option_code);
 
 GDHCP_EXTERN
-void g_dhcp_client_clear_requests(GDHCPClient *dhcp_client);
+void gdhcp_client_clear_requests(GDHCPClient *dhcp_client);
 
 GDHCP_EXTERN
-void g_dhcp_client_clear_values(GDHCPClient *dhcp_client);
+void gdhcp_client_clear_values(GDHCPClient *dhcp_client);
 
 GDHCP_EXTERN
-void g_dhcp_client_set_id(GDHCPClient *client, GError **error);
+void gdhcp_client_set_id(GDHCPClient *client, GError **error);
 
 GDHCP_EXTERN
-void g_dhcp_client_set_send(GDHCPClient *client, unsigned char option_code, const char *option_value, GError **error);
+void gdhcp_client_set_send(GDHCPClient *client, unsigned char option_code, const char *option_value, GError **error);
 
 GDHCP_EXTERN
-char *g_dhcp_client_get_server_address(GDHCPClient *client);
+char *gdhcp_client_get_server_address(GDHCPClient *client);
 
 GDHCP_EXTERN
-char *g_dhcp_client_get_address(GDHCPClient *client);
+char *gdhcp_client_get_address(GDHCPClient *client);
 
 GDHCP_EXTERN
-char *g_dhcp_client_get_netmask(GDHCPClient *client);
+char *gdhcp_client_get_netmask(GDHCPClient *client);
 
 GDHCP_EXTERN
-GList *g_dhcp_client_get_option(GDHCPClient *client, unsigned char option_code);
+GList *gdhcp_client_get_option(GDHCPClient *client, unsigned char option_code);
 
 GDHCP_EXTERN
-int g_dhcp_client_get_index(GDHCPClient *client);
+int gdhcp_client_get_index(GDHCPClient *client);
 
 GDHCP_EXTERN
-int g_dhcp_v6_create_duid(GDHCPDuidType duid_type, int index, int type, unsigned char **duid, int *duid_len);
+int gdhcp_v6_create_duid(GDHCPDuidType duid_type, int index, int type, unsigned char **duid, int *duid_len);
 
 GDHCP_EXTERN
-int g_dhcp_v6_client_set_duid(GDHCPClient *dhcp_client, unsigned char *duid, int duid_len);
+int gdhcp_v6_client_set_duid(GDHCPClient *dhcp_client, unsigned char *duid, int duid_len);
 
 GDHCP_EXTERN
-int g_dhcp_v6_client_set_pd(GDHCPClient *dhcp_client, uint32_t *T1, uint32_t *T2, GSList *prefixes);
+int gdhcp_v6_client_set_pd(GDHCPClient *dhcp_client, uint32_t *T1, uint32_t *T2, GSList *prefixes);
 
 GDHCP_EXTERN
-GSList *g_dhcp_v6_copy_prefixes(GSList *prefixes);
+GSList *gdhcp_v6_copy_prefixes(GSList *prefixes);
 
 GDHCP_EXTERN
-gboolean g_dhcp_v6_client_clear_send(GDHCPClient *dhcp_client, uint16_t code);
+gboolean gdhcp_v6_client_clear_send(GDHCPClient *dhcp_client, uint16_t code);
 
 GDHCP_EXTERN
-void g_dhcp_v6_client_set_send(GDHCPClient *dhcp_client, uint16_t option_code, uint8_t *option_value, uint16_t option_len);
+void gdhcp_v6_client_set_send(GDHCPClient *dhcp_client, uint16_t option_code, uint8_t *option_value, uint16_t option_len);
 
 GDHCP_EXTERN
-uint16_t g_dhcp_v6_client_get_status(GDHCPClient *dhcp_client);
+uint16_t gdhcp_v6_client_get_status(GDHCPClient *dhcp_client);
 
 GDHCP_EXTERN
-int g_dhcp_v6_client_set_oro(GDHCPClient *dhcp_client, int args, ...);
+int gdhcp_v6_client_set_oro(GDHCPClient *dhcp_client, int args, ...);
 
 GDHCP_EXTERN
-void g_dhcp_v6_client_create_iaid(GDHCPClient *dhcp_client, int index, unsigned char *iaid);
+void gdhcp_v6_client_create_iaid(GDHCPClient *dhcp_client, int index, unsigned char *iaid);
 
 GDHCP_EXTERN
-int g_dhcp_v6_client_get_timeouts(GDHCPClient *dhcp_client, uint32_t *T1, uint32_t *T2, time_t *started, time_t *expire);
+int gdhcp_v6_client_get_timeouts(GDHCPClient *dhcp_client, uint32_t *T1, uint32_t *T2, time_t *started, time_t *expire);
 
 GDHCP_EXTERN
-uint32_t g_dhcp_v6_client_get_iaid(GDHCPClient *dhcp_client);
+uint32_t gdhcp_v6_client_get_iaid(GDHCPClient *dhcp_client);
 
 GDHCP_EXTERN
-void g_dhcp_v6_client_set_iaid(GDHCPClient *dhcp_client, uint32_t iaid);
+void gdhcp_v6_client_set_iaid(GDHCPClient *dhcp_client, uint32_t iaid);
 
 GDHCP_EXTERN
-int g_dhcp_v6_client_set_ia(GDHCPClient *dhcp_client, int index,
+int gdhcp_v6_client_set_ia(GDHCPClient *dhcp_client, int index,
 			int code, uint32_t *T1, uint32_t *T2,
 			bool add_addresses, const char *address);
 
 GDHCP_EXTERN
-int g_dhcp_v6_client_set_ias(GDHCPClient *dhcp_client, int index,
+int gdhcp_v6_client_set_ias(GDHCPClient *dhcp_client, int index,
 			int code, uint32_t *T1, uint32_t *T2,
 			GSList *addresses);
 
 GDHCP_EXTERN
-void g_dhcp_v6_client_reset_request(GDHCPClient *dhcp_client);
+void gdhcp_v6_client_reset_request(GDHCPClient *dhcp_client);
 
 GDHCP_EXTERN
-void g_dhcp_v6_client_set_retransmit(GDHCPClient *dhcp_client);
+void gdhcp_v6_client_set_retransmit(GDHCPClient *dhcp_client);
 
 GDHCP_EXTERN
-void g_dhcp_v6_client_clear_retransmit(GDHCPClient *dhcp_client);
+void gdhcp_v6_client_clear_retransmit(GDHCPClient *dhcp_client);
 
 
 
