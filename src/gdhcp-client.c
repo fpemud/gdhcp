@@ -155,6 +155,7 @@ static guint signals[N_SIGNALS];
 static void remove_option_value(gpointer data);
 static void gdhcp_client_constructed (GObject *object);
 static void gdhcp_client_dispose (GObject *object);
+static gboolean ipv4ll_first_probe_timeout(gpointer user_data);
 
 static void gdhcp_client_class_init (GDHCPClientClass *klass)
 {
@@ -402,6 +403,11 @@ static void gdhcp_client_class_init (GDHCPClientClass *klass)
 	g_signal_set_va_marshaller(signals[SIG_DECLINE],
 							   G_TYPE_FROM_CLASS(klass),
 							   g_cclosure_marshal_VOID__VOIDv);
+}
+
+static void gdhcp_client_init (GDHCPClient *dhcp_client)
+{
+  GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
 }
 
 static void gdhcp_client_constructed(GObject *object)
@@ -1787,7 +1793,7 @@ static gboolean listener_event(GIOChannel *channel, GIOCondition condition, gpoi
 
 static int switch_listening_mode(GDHCPClient *dhcp_client, ListenMode listen_mode)
 {
-	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private (self);
+	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
 	GIOChannel *listener_channel;
 	int listener_sockfd;
 
@@ -2890,7 +2896,7 @@ static gboolean reboot_timeout(gpointer user_data)
 
 static gboolean ipv4ll_defend_timeout(gpointer user_data)
 {
-	GDHCPClient *dhcp_client = user_datas;
+	GDHCPClient *dhcp_client = user_data;
 	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
 
 	debug(dhcp_client, "back to MONITOR mode");
