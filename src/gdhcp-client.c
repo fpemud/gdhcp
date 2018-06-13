@@ -407,7 +407,6 @@ static void gdhcp_client_class_init (GDHCPClientClass *klass)
 
 static void gdhcp_client_init (GDHCPClient *dhcp_client)
 {
-  GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
 }
 
 static void gdhcp_client_constructed(GObject *object)
