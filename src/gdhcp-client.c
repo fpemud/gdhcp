@@ -153,15 +153,13 @@ static GParamSpec *properties[N_PROPS];
 static guint signals[N_SIGNALS];
 
 static void remove_option_value(gpointer data);
-static void gdhcp_client_constructed (GObject *object);
 static void gdhcp_client_dispose (GObject *object);
 static gboolean ipv4ll_first_probe_timeout(gpointer user_data);
 
-static void gdhcp_client_class_init (GDHCPClientClass *klass)
+static void gdhcp_client_class_init(GDHCPClientClass *klass)
 {
 	GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-	object_class->constructed = gdhcp_client_constructed;
 	object_class->dispose = gdhcp_client_dispose;
 
 	/**
@@ -407,31 +405,6 @@ static void gdhcp_client_class_init (GDHCPClientClass *klass)
 
 static void gdhcp_client_init (GDHCPClient *dhcp_client)
 {
-}
-
-static void gdhcp_client_constructed(GObject *object)
-{
-	GDHCPClient *dhcp_client = (GDHCPClient *)object;
-	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);
-
-	G_OBJECT_CLASS (gdhcp_client_parent_class)->constructed(object);
-
-	priv->listener_sockfd = -1;
-	priv->listen_mode = L_NONE;
-	priv->type = 0;							// fixme
-	priv->ifindex = 0;						// fixme
-	priv->listener_watch = 0;
-	priv->retry_times = 0;
-	priv->ack_retry_times = 0;
-	priv->code_value_hash = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, remove_option_value);
-	priv->send_value_hash = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, g_free);
-	priv->request_list = NULL;
-	priv->require_list = NULL;
-	priv->duid = NULL;
-	priv->duid_len = 0;
-	priv->last_request = time(NULL);
-	priv->expire = 0;
-	priv->request_bcast = false;
 }
 
 static void gdhcp_client_dispose(GObject *object)
@@ -1467,8 +1440,22 @@ GDHCPClient *gdhcp_client_new(GDHCPType type, int ifindex, GError **error)
 
 	get_interface_mac_address(ifindex, priv->mac_address);
 
+	priv->listener_sockfd = -1;
+	priv->listen_mode = L_NONE;
 	priv->type = type;
 	priv->ifindex = ifindex;
+	priv->listener_watch = 0;
+	priv->retry_times = 0;
+	priv->ack_retry_times = 0;
+	priv->code_value_hash = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, remove_option_value);
+	priv->send_value_hash = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, g_free);
+	priv->request_list = NULL;
+	priv->require_list = NULL;
+	priv->duid = NULL;
+	priv->duid_len = 0;
+	priv->last_request = time(NULL);
+	priv->expire = 0;
+	priv->request_bcast = false;
 
 	return dhcp_client;
 }

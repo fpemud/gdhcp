@@ -48,8 +48,7 @@
 /* 5 minutes  */
 #define OFFER_TIME (5*60)
 
-struct _GDHCPServer {
-	int ref_count;
+typedef struct {
 	GDHCPType type;
 	bool started;
 	int ifindex;
@@ -65,14 +64,68 @@ struct _GDHCPServer {
 	GHashTable *nip_lease_hash;
 	GHashTable *option_hash; /* Options send to client */
 	GDHCPSaveLeaseFunc save_lease_func;
-	GDHCPLeaseAddedCb lease_added_cb;
-};
+} GDHCPServerPrivate;
+
+G_DEFINE_TYPE_WITH_PRIVATE (GDHCPServer, gdhcp_server, G_TYPE_OBJECT)
 
 struct dhcp_lease {
 	time_t expire;
 	uint32_t lease_nip;
 	uint8_t lease_mac[ETH_ALEN];
 };
+
+enum {
+	SIG_LEASE_ADDED,
+	N_SIGNALS,
+};
+
+static guint signals[N_SIGNALS];
+
+static void gdhcp_server_dispose(GObject *object);
+static void destroy_lease_table(GDHCPServer *dhcp_server);
+
+static void gdhcp_server_class_init(GDHCPServerClass *klass)
+{
+	GObjectClass *object_class = G_OBJECT_CLASS (klass);
+
+	object_class->dispose = gdhcp_server_dispose;
+
+	/**
+	 * GDHCPServer::lease_added:
+	 *
+	 * The "lease_added" signal is called when FIXME.
+	 */
+	signals[SIG_LEASE_ADDED] = g_signal_new("lease_added",
+											G_TYPE_FROM_CLASS(klass),
+											G_SIGNAL_RUN_LAST,
+											G_STRUCT_OFFSET(GDHCPServerClass, lease_added),
+											NULL, NULL,
+											g_cclosure_marshal_VOID__VOID,
+											G_TYPE_NONE, 0);
+	g_signal_set_va_marshaller(signals[SIG_LEASE_ADDED],
+							   G_TYPE_FROM_CLASS(klass),
+							   g_cclosure_marshal_VOID__VOIDv);
+}
+
+static void gdhcp_server_init(GDHCPServer *dhcp_server)
+{
+}
+
+static void gdhcp_server_dispose(GObject *object)
+{
+	GDHCPServer *dhcp_server = (GDHCPServer *)object;
+	GDHCPServerPrivate *priv = gdhcp_server_get_instance_private(dhcp_server);
+
+	gdhcp_server_stop(dhcp_server);
+
+	g_hash_table_destroy(priv->option_hash);
+
+	destroy_lease_table(dhcp_server);
+
+	g_free(priv->interface);
+
+	G_OBJECT_CLASS (gdhcp_server_parent_class)->dispose(object);
+}
 
 static inline void debug(GDHCPServer *server, const char *format, ...)
 {
@@ -89,12 +142,12 @@ static inline void debug(GDHCPServer *server, const char *format, ...)
 #endif
 }
 
-static struct dhcp_lease *find_lease_by_mac(GDHCPServer *dhcp_server,
-						const uint8_t *mac)
+static struct dhcp_lease *find_lease_by_mac(GDHCPServer *dhcp_server, const uint8_t *mac)
 {
+	GDHCPServerPrivate *priv = gdhcp_server_get_instance_private(dhcp_server);
 	GList *list;
 
-	for (list = dhcp_server->lease_list; list; list = list->next) {
+	for (list = priv->lease_list; list; list = list->next) {
 		struct dhcp_lease *lease = list->data;
 
 		if (memcmp(lease->lease_mac, mac, ETH_ALEN) == 0)
@@ -106,11 +159,11 @@ static struct dhcp_lease *find_lease_by_mac(GDHCPServer *dhcp_server,
 
 static void remove_lease(GDHCPServer *dhcp_server, struct dhcp_lease *lease)
 {
-	dhcp_server->lease_list =
-			g_list_remove(dhcp_server->lease_list, lease);
+	GDHCPServerPrivate *priv = gdhcp_server_get_instance_private(dhcp_server);
 
-	g_hash_table_remove(dhcp_server->nip_lease_hash,
-				GINT_TO_POINTER((int) lease->lease_nip));
+	priv->lease_list = g_list_remove(priv->lease_list, lease);
+
+	g_hash_table_remove(priv->nip_lease_hash, GINT_TO_POINTER((int) lease->lease_nip));
 	g_free(lease);
 }
 
@@ -118,15 +171,16 @@ static void remove_lease(GDHCPServer *dhcp_server, struct dhcp_lease *lease)
 static int get_lease(GDHCPServer *dhcp_server, uint32_t yiaddr,
 				const uint8_t *mac, struct dhcp_lease **lease)
 {
+	GDHCPServerPrivate *priv = gdhcp_server_get_instance_private(dhcp_server);
 	struct dhcp_lease *lease_nip, *lease_mac;
 
 	if (yiaddr == 0)
 		return -ENXIO;
 
-	if (ntohl(yiaddr) < dhcp_server->start_ip)
+	if (ntohl(yiaddr) < priv->start_ip)
 		return -ENXIO;
 
-	if (ntohl(yiaddr) > dhcp_server->end_ip)
+	if (ntohl(yiaddr) > priv->end_ip)
 		return -ENXIO;
 
 	if (memcmp(mac, MAC_BCAST_ADDR, ETH_ALEN) == 0)
@@ -137,16 +191,12 @@ static int get_lease(GDHCPServer *dhcp_server, uint32_t yiaddr,
 
 	lease_mac = find_lease_by_mac(dhcp_server, mac);
 
-	lease_nip = g_hash_table_lookup(dhcp_server->nip_lease_hash,
-					GINT_TO_POINTER((int) ntohl(yiaddr)));
+	lease_nip = g_hash_table_lookup(priv->nip_lease_hash, GINT_TO_POINTER((int) ntohl(yiaddr)));
 	debug(dhcp_server, "lease_mac %p lease_nip %p", lease_mac, lease_nip);
 
 	if (lease_nip) {
-		dhcp_server->lease_list =
-				g_list_remove(dhcp_server->lease_list,
-								lease_nip);
-		g_hash_table_remove(dhcp_server->nip_lease_hash,
-				GINT_TO_POINTER((int) ntohl(yiaddr)));
+		priv->lease_list = g_list_remove(priv->lease_list, lease_nip);
+		g_hash_table_remove(priv->nip_lease_hash, GINT_TO_POINTER((int) ntohl(yiaddr)));
 
 		if (!lease_mac)
 			*lease = lease_nip;
@@ -160,11 +210,8 @@ static int get_lease(GDHCPServer *dhcp_server, uint32_t yiaddr,
 	}
 
 	if (lease_mac) {
-		dhcp_server->lease_list =
-				g_list_remove(dhcp_server->lease_list,
-								lease_mac);
-		g_hash_table_remove(dhcp_server->nip_lease_hash,
-				GINT_TO_POINTER((int) lease_mac->lease_nip));
+		priv->lease_list = g_list_remove(priv->lease_list, lease_mac);
+		g_hash_table_remove(priv->nip_lease_hash, GINT_TO_POINTER((int) lease_mac->lease_nip));
 		*lease = lease_mac;
 
 		return 0;
@@ -188,6 +235,7 @@ static gint compare_expire(gconstpointer a, gconstpointer b)
 static struct dhcp_lease *add_lease(GDHCPServer *dhcp_server, uint32_t expire,
 					const uint8_t *chaddr, uint32_t yiaddr)
 {
+	GDHCPServerPrivate *priv = gdhcp_server_get_instance_private(dhcp_server);
 	struct dhcp_lease *lease = NULL;
 	int ret;
 
@@ -201,24 +249,21 @@ static struct dhcp_lease *add_lease(GDHCPServer *dhcp_server, uint32_t expire,
 	lease->lease_nip = ntohl(yiaddr);
 
 	if (expire == 0)
-		lease->expire = time(NULL) + dhcp_server->lease_seconds;
+		lease->expire = time(NULL) + priv->lease_seconds;
 	else
 		lease->expire = expire;
 
-	dhcp_server->lease_list = g_list_insert_sorted(dhcp_server->lease_list,
-							lease, compare_expire);
+	priv->lease_list = g_list_insert_sorted(priv->lease_list, lease, compare_expire);
 
-	g_hash_table_insert(dhcp_server->nip_lease_hash,
-				GINT_TO_POINTER((int) lease->lease_nip), lease);
+	g_hash_table_insert(priv->nip_lease_hash, GINT_TO_POINTER((int) lease->lease_nip), lease);
 
 	return lease;
 }
 
-static struct dhcp_lease *find_lease_by_nip(GDHCPServer *dhcp_server,
-								uint32_t nip)
+static struct dhcp_lease *find_lease_by_nip(GDHCPServer *dhcp_server, uint32_t nip)
 {
-	return g_hash_table_lookup(dhcp_server->nip_lease_hash,
-						GINT_TO_POINTER((int) nip));
+	GDHCPServerPrivate *priv = gdhcp_server_get_instance_private(dhcp_server);
+	return g_hash_table_lookup(priv->nip_lease_hash, GINT_TO_POINTER((int) nip));
 }
 
 /* Check if the IP is taken; if it is, add it to the lease table */
@@ -239,11 +284,12 @@ static bool is_expired_lease(struct dhcp_lease *lease)
 static uint32_t find_free_or_expired_nip(GDHCPServer *dhcp_server,
 					const uint8_t *safe_mac)
 {
+	GDHCPServerPrivate *priv = gdhcp_server_get_instance_private(dhcp_server);
 	uint32_t ip_addr;
 	struct dhcp_lease *lease;
 	GList *list;
-	ip_addr = dhcp_server->start_ip;
-	for (; ip_addr <= dhcp_server->end_ip; ip_addr++) {
+	ip_addr = priv->start_ip;
+	for (; ip_addr <= priv->end_ip; ip_addr++) {
 		/* e.g. 192.168.55.0 */
 		if ((ip_addr & 0xff) == 0)
 			continue;
@@ -261,7 +307,7 @@ static uint32_t find_free_or_expired_nip(GDHCPServer *dhcp_server,
 	}
 
 	/* The last lease is the oldest one */
-	list = g_list_last(dhcp_server->lease_list);
+	list = g_list_last(priv->lease_list);
 	if (!list)
 		return 0;
 
@@ -281,32 +327,34 @@ static uint32_t find_free_or_expired_nip(GDHCPServer *dhcp_server,
 static void lease_set_expire(GDHCPServer *dhcp_server,
 			struct dhcp_lease *lease, uint32_t expire)
 {
-	dhcp_server->lease_list = g_list_remove(dhcp_server->lease_list, lease);
+	GDHCPServerPrivate *priv = gdhcp_server_get_instance_private(dhcp_server);
+
+	priv->lease_list = g_list_remove(priv->lease_list, lease);
 
 	lease->expire = expire;
 
-	dhcp_server->lease_list = g_list_insert_sorted(dhcp_server->lease_list,
-							lease, compare_expire);
+	priv->lease_list = g_list_insert_sorted(priv->lease_list, lease, compare_expire);
 }
 
 static void destroy_lease_table(GDHCPServer *dhcp_server)
 {
+	GDHCPServerPrivate *priv = gdhcp_server_get_instance_private(dhcp_server);
 	GList *list;
 
-	g_hash_table_destroy(dhcp_server->nip_lease_hash);
+	g_hash_table_destroy(priv->nip_lease_hash);
 
-	dhcp_server->nip_lease_hash = NULL;
+	priv->nip_lease_hash = NULL;
 
-	for (list = dhcp_server->lease_list; list; list = list->next) {
+	for (list = priv->lease_list; list; list = list->next) {
 		struct dhcp_lease *lease = list->data;
-
 		g_free(lease);
 	}
 
-	g_list_free(dhcp_server->lease_list);
+	g_list_free(priv->lease_list);
 
-	dhcp_server->lease_list = NULL;
+	priv->lease_list = NULL;
 }
+
 static uint32_t get_interface_address(int index)
 {
 	struct ifreq ifr;
@@ -344,69 +392,79 @@ done:
 	return ret;
 }
 
-GDHCPServer *g_dhcp_server_new(GDHCPType type,
-		int ifindex, GDHCPServerError *error)
+/**
+ * gdhcp_server_new:
+ * @type:
+ * @ifindex:
+ *
+ * Creates a new #GDHCPServer instance.
+ *
+ * Returns: (transfer full): A newly created #GDHCPServer
+ */
+GDHCPServer *gdhcp_server_new(GDHCPType type, int ifindex, GError **error)
 {
 	GDHCPServer *dhcp_server = NULL;
+	GDHCPServerPrivate *priv;
 
-	if (ifindex < 0) {
-		*error = G_DHCP_SERVER_ERROR_INVALID_INDEX;
-		return NULL;
-	}
+	g_assert(ifindex > 0);
 
-	dhcp_server = g_try_new0(GDHCPServer, 1);
+	dhcp_server = g_object_new(GDHCP_TYPE_SERVER, NULL);
 	if (!dhcp_server) {
-		*error = G_DHCP_SERVER_ERROR_NOMEM;
 		return NULL;
 	}
 
-	dhcp_server->interface = get_interface_name(ifindex);
-	if (!dhcp_server->interface) {
-		*error = G_DHCP_SERVER_ERROR_INTERFACE_UNAVAILABLE;
-		goto error;
+	priv = gdhcp_server_get_instance_private(dhcp_server);
+
+	priv->interface = get_interface_name(ifindex);
+	if (!priv->interface) {
+		g_object_unref(dhcp_server);
+		g_set_error_literal(error,
+							g_quark_from_string("fixme"),
+							1,
+							"Interface unavailable");
+		return NULL;
 	}
 
 	if (!interface_is_up(ifindex)) {
-		*error = G_DHCP_SERVER_ERROR_INTERFACE_DOWN;
-		goto error;
+		g_free(priv->interface);
+		g_object_unref(dhcp_server);
+		g_set_error_literal(error,
+							g_quark_from_string("fixme"),
+							1,
+							"Interface down");
+		return NULL;
 	}
 
-	dhcp_server->server_nip = get_interface_address(ifindex);
-	if (dhcp_server->server_nip == 0) {
-		*error = G_DHCP_SERVER_ERROR_IP_ADDRESS_INVALID;
-		goto error;
+	priv->server_nip = get_interface_address(ifindex);
+	if (priv->server_nip == 0) {
+		g_free(priv->interface);
+		g_object_unref(dhcp_server);
+		g_set_error_literal(error,
+							g_quark_from_string("fixme"),
+							1,
+							"IP address invalid");
+		return NULL;
 	}
 
-	dhcp_server->nip_lease_hash = g_hash_table_new_full(g_direct_hash,
-						g_direct_equal, NULL, NULL);
-	dhcp_server->option_hash = g_hash_table_new_full(g_direct_hash,
-						g_direct_equal, NULL, NULL);
+	priv->nip_lease_hash = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, NULL);
+	priv->option_hash = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, NULL);
 
-	dhcp_server->started = FALSE;
+	priv->started = FALSE;
 
 	/* All the leases have the same fixed lease time,
 	 * do not support DHCP_LEASE_TIME option from client.
 	 */
-	dhcp_server->lease_seconds = DEFAULT_DHCP_LEASE_SEC;
+	priv->lease_seconds = DEFAULT_DHCP_LEASE_SEC;
 
-	dhcp_server->type = type;
-	dhcp_server->ref_count = 1;
-	dhcp_server->ifindex = ifindex;
-	dhcp_server->listener_sockfd = -1;
-	dhcp_server->listener_watch = -1;
-	dhcp_server->listener_channel = NULL;
-	dhcp_server->save_lease_func = NULL;
-
-	*error = G_DHCP_SERVER_ERROR_NONE;
+	priv->type = type;
+	priv->ifindex = ifindex;
+	priv->listener_sockfd = -1;
+	priv->listener_watch = -1;
+	priv->listener_channel = NULL;
+	priv->save_lease_func = NULL;
 
 	return dhcp_server;
-
-error:
-	g_free(dhcp_server->interface);
-	g_free(dhcp_server);
-	return NULL;
 }
-
 
 static uint8_t check_packet_type(struct dhcp_packet *packet)
 {
@@ -435,6 +493,8 @@ static uint8_t check_packet_type(struct dhcp_packet *packet)
 static void init_packet(GDHCPServer *dhcp_server, struct dhcp_packet *packet,
 				struct dhcp_packet *client_packet, char type)
 {
+	GDHCPServerPrivate *priv = gdhcp_server_get_instance_private(dhcp_server);
+
 	/* Sets op, htype, hlen, cookie fields
 	 * and adds DHCP_MESSAGE_TYPE option */
 	dhcp_init_header(packet, type);
@@ -445,8 +505,7 @@ static void init_packet(GDHCPServer *dhcp_server, struct dhcp_packet *packet,
 	packet->flags = client_packet->flags;
 	packet->gateway_nip = client_packet->gateway_nip;
 	packet->ciaddr = client_packet->ciaddr;
-	dhcp_add_option_uint32(packet, DHCP_SERVER_ID,
-					ntohl(dhcp_server->server_nip));
+	dhcp_add_option_uint32(packet, DHCP_SERVER_ID, ntohl(priv->server_nip));
 }
 
 static void add_option(gpointer key, gpointer value, gpointer user_data)
@@ -477,22 +536,22 @@ static void add_option(gpointer key, gpointer value, gpointer user_data)
 static void add_server_options(GDHCPServer *dhcp_server,
 				struct dhcp_packet *packet)
 {
-	g_hash_table_foreach(dhcp_server->option_hash,
-				add_option, packet);
+	GDHCPServerPrivate *priv = gdhcp_server_get_instance_private(dhcp_server);
+	g_hash_table_foreach(priv->option_hash, add_option, packet);
 }
 
-static bool check_requested_nip(GDHCPServer *dhcp_server,
-					uint32_t requested_nip)
+static bool check_requested_nip(GDHCPServer *dhcp_server, uint32_t requested_nip)
 {
+	GDHCPServerPrivate *priv = gdhcp_server_get_instance_private(dhcp_server);
 	struct dhcp_lease *lease;
 
 	if (requested_nip == 0)
 		return false;
 
-	if (requested_nip < dhcp_server->start_ip)
+	if (requested_nip < priv->start_ip)
 		return false;
 
-	if (requested_nip > dhcp_server->end_ip)
+	if (requested_nip > priv->end_ip)
 		return false;
 
 	lease = find_lease_by_nip(dhcp_server, requested_nip);
@@ -505,9 +564,9 @@ static bool check_requested_nip(GDHCPServer *dhcp_server,
 	return true;
 }
 
-static void send_packet_to_client(GDHCPServer *dhcp_server,
-				struct dhcp_packet *dhcp_pkt)
+static void send_packet_to_client(GDHCPServer *dhcp_server, struct dhcp_packet *dhcp_pkt)
 {
+	GDHCPServerPrivate *priv = gdhcp_server_get_instance_private(dhcp_server);
 	const uint8_t *chaddr;
 	uint32_t ciaddr;
 
@@ -523,9 +582,9 @@ static void send_packet_to_client(GDHCPServer *dhcp_server,
 	}
 
 	dhcp_send_raw_packet(dhcp_pkt,
-		dhcp_server->server_nip, SERVER_PORT,
+		priv->server_nip, SERVER_PORT,
 		ciaddr, CLIENT_PORT, chaddr,
-		dhcp_server->ifindex, false);
+		priv->ifindex, false);
 }
 
 static void send_offer(GDHCPServer *dhcp_server,
@@ -533,6 +592,7 @@ static void send_offer(GDHCPServer *dhcp_server,
 				struct dhcp_lease *lease,
 					uint32_t requested_nip)
 {
+	GDHCPServerPrivate *priv = gdhcp_server_get_instance_private(dhcp_server);
 	struct dhcp_packet packet;
 	struct in_addr addr;
 
@@ -543,8 +603,7 @@ static void send_offer(GDHCPServer *dhcp_server,
 	else if (check_requested_nip(dhcp_server, requested_nip))
 		packet.yiaddr = htonl(requested_nip);
 	else
-		packet.yiaddr = htonl(find_free_or_expired_nip(
-					dhcp_server, client_packet->chaddr));
+		packet.yiaddr = htonl(find_free_or_expired_nip(dhcp_server, client_packet->chaddr));
 
 	debug(dhcp_server, "find yiaddr %u", packet.yiaddr);
 
@@ -553,16 +612,14 @@ static void send_offer(GDHCPServer *dhcp_server,
 		return;
 	}
 
-	lease = add_lease(dhcp_server, OFFER_TIME,
-				packet.chaddr, packet.yiaddr);
+	lease = add_lease(dhcp_server, OFFER_TIME, packet.chaddr, packet.yiaddr);
 	if (!lease) {
 		debug(dhcp_server,
 				"Err: No free IP addresses. OFFER abandoned");
 		return;
 	}
 
-	dhcp_add_option_uint32(&packet, DHCP_LEASE_TIME,
-						dhcp_server->lease_seconds);
+	dhcp_add_option_uint32(&packet, DHCP_LEASE_TIME, priv->lease_seconds);
 	add_server_options(dhcp_server, &packet);
 
 	addr.s_addr = packet.yiaddr;
@@ -573,21 +630,22 @@ static void send_offer(GDHCPServer *dhcp_server,
 
 static void save_lease(GDHCPServer *dhcp_server)
 {
+	GDHCPServerPrivate *priv = gdhcp_server_get_instance_private(dhcp_server);
 	GList *list;
 
-	if (!dhcp_server->save_lease_func)
+	if (!priv->save_lease_func)
 		return;
 
-	for (list = dhcp_server->lease_list; list; list = list->next) {
+	for (list = priv->lease_list; list; list = list->next) {
 		struct dhcp_lease *lease = list->data;
-		dhcp_server->save_lease_func(lease->lease_mac,
-					lease->lease_nip, lease->expire);
+		priv->save_lease_func(lease->lease_mac, lease->lease_nip, lease->expire);
 	}
 }
 
 static void send_ACK(GDHCPServer *dhcp_server,
 		struct dhcp_packet *client_packet, uint32_t dest)
 {
+	GDHCPServerPrivate *priv = gdhcp_server_get_instance_private(dhcp_server);
 	struct dhcp_packet packet;
 	uint32_t lease_time_sec;
 	struct in_addr addr;
@@ -595,7 +653,7 @@ static void send_ACK(GDHCPServer *dhcp_server,
 	init_packet(dhcp_server, &packet, client_packet, DHCPACK);
 	packet.yiaddr = htonl(dest);
 
-	lease_time_sec = dhcp_server->lease_seconds;
+	lease_time_sec = priv->lease_seconds;
 
 	dhcp_add_option_uint32(&packet, DHCP_LEASE_TIME, lease_time_sec);
 
@@ -609,13 +667,13 @@ static void send_ACK(GDHCPServer *dhcp_server,
 
 	add_lease(dhcp_server, 0, packet.chaddr, packet.yiaddr);
 
-	if (dhcp_server->lease_added_cb)
-		dhcp_server->lease_added_cb(packet.chaddr, packet.yiaddr);
+	g_signal_emit(dhcp_server, signals[SIG_LEASE_ADDED], packet.chaddr, packet.yiaddr);
 }
 
 static void send_NAK(GDHCPServer *dhcp_server,
 			struct dhcp_packet *client_packet)
 {
+	GDHCPServerPrivate *priv = gdhcp_server_get_instance_private(dhcp_server);
 	struct dhcp_packet packet;
 
 	init_packet(dhcp_server, &packet, client_packet, DHCPNAK);
@@ -623,9 +681,9 @@ static void send_NAK(GDHCPServer *dhcp_server,
 	debug(dhcp_server, "Sending NAK");
 
 	dhcp_send_raw_packet(&packet,
-			dhcp_server->server_nip, SERVER_PORT,
+			priv->server_nip, SERVER_PORT,
 			INADDR_BROADCAST, CLIENT_PORT, MAC_BCAST_ADDR,
-			dhcp_server->ifindex, false);
+			priv->ifindex, false);
 }
 
 static void send_inform(GDHCPServer *dhcp_server,
@@ -642,6 +700,7 @@ static gboolean listener_event(GIOChannel *channel, GIOCondition condition,
 							gpointer user_data)
 {
 	GDHCPServer *dhcp_server = user_data;
+	GDHCPServerPrivate *priv = gdhcp_server_get_instance_private(dhcp_server);
 	struct dhcp_packet packet;
 	struct dhcp_lease *lease;
 	uint32_t requested_nip = 0;
@@ -649,11 +708,11 @@ static gboolean listener_event(GIOChannel *channel, GIOCondition condition,
 	int re;
 
 	if (condition & (G_IO_NVAL | G_IO_ERR | G_IO_HUP)) {
-		dhcp_server->listener_watch = 0;
+		priv->listener_watch = 0;
 		return FALSE;
 	}
 
-	re = dhcp_recv_l3_packet(&packet, dhcp_server->listener_sockfd);
+	re = dhcp_recv_l3_packet(&packet, priv->listener_sockfd);
 	if (re < 0)
 		return TRUE;
 
@@ -666,7 +725,7 @@ static gboolean listener_event(GIOChannel *channel, GIOCondition condition,
 		uint32_t server_nid =
 			get_unaligned((const uint32_t *) server_id_option);
 
-		if (server_nid != dhcp_server->server_nip)
+		if (server_nid != priv->server_nip)
 			return TRUE;
 	}
 
@@ -743,16 +802,17 @@ static gboolean listener_event(GIOChannel *channel, GIOCondition condition,
 }
 
 /* Caller need to load leases before call it */
-int g_dhcp_server_start(GDHCPServer *dhcp_server)
+int gdhcp_server_start(GDHCPServer *dhcp_server)
 {
+	GDHCPServerPrivate *priv = gdhcp_server_get_instance_private(dhcp_server);
 	GIOChannel *listener_channel;
 	int listener_sockfd;
 
-	if (dhcp_server->started)
+	if (priv->started)
 		return 0;
 
 	listener_sockfd = dhcp_l3_socket(SERVER_PORT,
-					dhcp_server->interface, AF_INET);
+					priv->interface, AF_INET);
 	if (listener_sockfd < 0)
 		return -EIO;
 
@@ -762,25 +822,26 @@ int g_dhcp_server_start(GDHCPServer *dhcp_server)
 		return -EIO;
 	}
 
-	dhcp_server->listener_sockfd = listener_sockfd;
-	dhcp_server->listener_channel = listener_channel;
+	priv->listener_sockfd = listener_sockfd;
+	priv->listener_channel = listener_channel;
 
 	g_io_channel_set_close_on_unref(listener_channel, TRUE);
-	dhcp_server->listener_watch =
+	priv->listener_watch =
 			g_io_add_watch_full(listener_channel, G_PRIORITY_HIGH,
 				G_IO_IN | G_IO_NVAL | G_IO_ERR | G_IO_HUP,
 						listener_event, dhcp_server,
 								NULL);
-	g_io_channel_unref(dhcp_server->listener_channel);
+	g_io_channel_unref(priv->listener_channel);
 
-	dhcp_server->started = TRUE;
+	priv->started = TRUE;
 
 	return 0;
 }
 
-int g_dhcp_server_set_option(GDHCPServer *dhcp_server,
+int gdhcp_server_set_option(GDHCPServer *dhcp_server,
 		unsigned char option_code, const char *option_value)
 {
+	GDHCPServerPrivate *priv = gdhcp_server_get_instance_private(dhcp_server);
 	struct in_addr nip;
 
 	if (!option_value)
@@ -799,97 +860,57 @@ int g_dhcp_server_set_option(GDHCPServer *dhcp_server,
 		return -EINVAL;
 	}
 
-	g_hash_table_replace(dhcp_server->option_hash,
+	g_hash_table_replace(priv->option_hash,
 			GINT_TO_POINTER((int) option_code),
 					(gpointer) option_value);
 	return 0;
 }
 
-void g_dhcp_server_set_save_lease(GDHCPServer *dhcp_server,
+void gdhcp_server_set_save_lease(GDHCPServer *dhcp_server,
 				GDHCPSaveLeaseFunc func, gpointer user_data)
 {
-	if (!dhcp_server)
-		return;
-
-	dhcp_server->save_lease_func = func;
+	GDHCPServerPrivate *priv = gdhcp_server_get_instance_private(dhcp_server);
+	priv->save_lease_func = func;
 }
 
-void g_dhcp_server_set_lease_added_cb(GDHCPServer *dhcp_server,
-							GDHCPLeaseAddedCb cb)
+void gdhcp_server_stop(GDHCPServer *dhcp_server)
 {
-	if (!dhcp_server)
-		return;
+	GDHCPServerPrivate *priv = gdhcp_server_get_instance_private(dhcp_server);
 
-	dhcp_server->lease_added_cb = cb;
-}
-
-GDHCPServer *g_dhcp_server_ref(GDHCPServer *dhcp_server)
-{
-	if (!dhcp_server)
-		return NULL;
-
-	__sync_fetch_and_add(&dhcp_server->ref_count, 1);
-
-	return dhcp_server;
-}
-
-void g_dhcp_server_stop(GDHCPServer *dhcp_server)
-{
 	/* Save leases, before stop; load them before start */
 	save_lease(dhcp_server);
 
-	if (dhcp_server->listener_watch > 0) {
+	if (priv->listener_watch > 0) {
 		g_source_remove(dhcp_server->listener_watch);
-		dhcp_server->listener_watch = 0;
+		priv->listener_watch = 0;
 	}
 
-	dhcp_server->listener_channel = NULL;
+	priv->listener_channel = NULL;
 
-	dhcp_server->started = FALSE;
+	priv->started = FALSE;
 }
 
-void g_dhcp_server_unref(GDHCPServer *dhcp_server)
+int gdhcp_server_set_ip_range(GDHCPServer *dhcp_server, const char *start_ip, const char *end_ip)
 {
-	if (!dhcp_server)
-		return;
-
-	if (__sync_fetch_and_sub(&dhcp_server->ref_count, 1) != 1)
-		return;
-
-	g_dhcp_server_stop(dhcp_server);
-
-	g_hash_table_destroy(dhcp_server->option_hash);
-
-	destroy_lease_table(dhcp_server);
-
-	g_free(dhcp_server->interface);
-
-	g_free(dhcp_server);
-}
-
-int g_dhcp_server_set_ip_range(GDHCPServer *dhcp_server,
-		const char *start_ip, const char *end_ip)
-{
+	GDHCPServerPrivate *priv = gdhcp_server_get_instance_private(dhcp_server);
 	struct in_addr _host_addr;
 
 	if (inet_aton(start_ip, &_host_addr) == 0)
 		return -ENXIO;
 
-	dhcp_server->start_ip = ntohl(_host_addr.s_addr);
+	priv->start_ip = ntohl(_host_addr.s_addr);
 
 	if (inet_aton(end_ip, &_host_addr) == 0)
 		return -ENXIO;
 
-	dhcp_server->end_ip = ntohl(_host_addr.s_addr);
+	priv->end_ip = ntohl(_host_addr.s_addr);
 
 	return 0;
 }
 
-void g_dhcp_server_set_lease_time(GDHCPServer *dhcp_server,
+void gdhcp_server_set_lease_time(GDHCPServer *dhcp_server,
 					unsigned int lease_time)
 {
-	if (!dhcp_server)
-		return;
-
-	dhcp_server->lease_seconds = lease_time;
+	GDHCPServerPrivate *priv = gdhcp_server_get_instance_private(dhcp_server);
+	priv->lease_seconds = lease_time;
 }
