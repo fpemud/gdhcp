@@ -838,8 +838,7 @@ int gdhcp_server_start(GDHCPServer *dhcp_server)
 	return 0;
 }
 
-int gdhcp_server_set_option(GDHCPServer *dhcp_server,
-		unsigned char option_code, const char *option_value)
+int gdhcp_server_set_option(GDHCPServer *dhcp_server, unsigned char option_code, const char *option_value)
 {
 	GDHCPServerPrivate *priv = gdhcp_server_get_instance_private(dhcp_server);
 	struct in_addr nip;
@@ -847,22 +846,20 @@ int gdhcp_server_set_option(GDHCPServer *dhcp_server,
 	if (!option_value)
 		return -EINVAL;
 
-	debug(dhcp_server, "option_code %d option_value %s",
-					option_code, option_value);
+	debug(dhcp_server, "option_code %d option_value %s", option_code, option_value);
+
 	switch (option_code) {
-	case G_DHCP_SUBNET:
-	case G_DHCP_ROUTER:
-	case G_DHCP_DNS_SERVER:
-		if (inet_aton(option_value, &nip) == 0)
-			return -ENXIO;
-		break;
-	default:
-		return -EINVAL;
+		case G_DHCP_SUBNET:
+		case G_DHCP_ROUTER:
+		case G_DHCP_DNS_SERVER:
+			if (inet_aton(option_value, &nip) == 0)
+				return -ENXIO;
+			break;
+		default:
+			return -EINVAL;
 	}
 
-	g_hash_table_replace(priv->option_hash,
-			GINT_TO_POINTER((int) option_code),
-					(gpointer) option_value);
+	g_hash_table_replace(priv->option_hash, GINT_TO_POINTER((int) option_code), (gpointer) option_value);
 	return 0;
 }
 
