@@ -288,6 +288,7 @@ static uint32_t find_free_or_expired_nip(GDHCPServer *dhcp_server,
 	uint32_t ip_addr;
 	struct dhcp_lease *lease;
 	GList *list;
+
 	ip_addr = priv->start_ip;
 	for (; ip_addr <= priv->end_ip; ip_addr++) {
 		/* e.g. 192.168.55.0 */
@@ -324,8 +325,7 @@ static uint32_t find_free_or_expired_nip(GDHCPServer *dhcp_server,
 	return lease->lease_nip;
 }
 
-static void lease_set_expire(GDHCPServer *dhcp_server,
-			struct dhcp_lease *lease, uint32_t expire)
+static void lease_set_expire(GDHCPServer *dhcp_server, struct dhcp_lease *lease, uint32_t expire)
 {
 	GDHCPServerPrivate *priv = gdhcp_server_get_instance_private(dhcp_server);
 
@@ -881,7 +881,7 @@ void gdhcp_server_stop(GDHCPServer *dhcp_server)
 	save_lease(dhcp_server);
 
 	if (priv->listener_watch > 0) {
-		g_source_remove(dhcp_server->listener_watch);
+		g_source_remove(priv->listener_watch);
 		priv->listener_watch = 0;
 	}
 
