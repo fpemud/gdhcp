@@ -126,9 +126,11 @@ typedef struct {
 
 G_DEFINE_TYPE_WITH_PRIVATE (GDHCPClient, gdhcp_client, G_TYPE_OBJECT)
 
+/*
 enum {
 	N_PROPS,
 };
+*/
 
 enum {
 	SIG_LEASE_AVAILABLE,
@@ -149,7 +151,7 @@ enum {
 	N_SIGNALS,
 };
 
-static GParamSpec *properties[N_PROPS];
+/* static GParamSpec *properties[N_PROPS]; */
 static guint signals[N_SIGNALS];
 
 static void remove_option_value(gpointer data);

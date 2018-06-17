@@ -30,12 +30,17 @@ gdhcp_generated_headers = [
 
 gdhcp_public_headers = [
   'gdhcp.h',
+]
+
+gdhcp_headers = [
+  gdhcp_generated_headers,
+  gdhcp_public_headers,
   'gdhcp-common.h',
   'gdhcp-ipv4ll.h',
   'gdhcp-unaligned.h',
 ]
 
-gdhcp_public_sources = [
+gdhcp_sources = [
   'gdhcp-common.c',
   'gdhcp-ipv4ll.c',
   'gdhcp-unaligned.c',
@@ -43,17 +48,16 @@ gdhcp_public_sources = [
   'gdhcp-server.c',
 ]
 
-gdhcp_sources = [
-  gdhcp_generated_headers,
-  gdhcp_public_headers,
-  gdhcp_public_sources,
+gdhcp_files = [
+  gdhcp_headers,
+  gdhcp_sources,
 ]
 
 gdhcp_deps = [
   dependency('gio-2.0'),
 ]
 
-gdhcp = library('gdhcp-' + apiversion, gdhcp_sources,
+gdhcp = library('gdhcp-' + apiversion, gdhcp_files,
             c_args: hidden_visibility_args,
       dependencies: gdhcp_deps,
          soversion: soversion,
@@ -68,7 +72,7 @@ gdhcp = library('gdhcp-' + apiversion, gdhcp_sources,
 if get_option('with_introspection')
 
   gir = gnome.generate_gir(gdhcp,
-                sources: gdhcp_sources,
+                sources: gdhcp_public_headers,
               nsversion: apiversion,
               namespace: 'gdhcp',
           symbol_prefix: 'g_dhcp',
@@ -95,7 +99,7 @@ endif
 #
 # Install header files
 #
-install_headers(gdhcp_public_headers, subdir: gdhcp_header_subdir)
+install_headers(gdhcp_headers, subdir: gdhcp_header_subdir)
 
 
 #
