@@ -39,6 +39,16 @@ G_BEGIN_DECLS
 #define GDHCP_EXTERN
 #endif
 
+/* common */
+
+typedef enum {
+	G_DHCP_IPV4,
+	G_DHCP_IPV6,
+	G_DHCP_IPV4LL,
+} GDHCPType;
+
+
+
 /* DHCP client part */
 
 #define GDHCP_TYPE_CLIENT  (gdhcp_client_get_type())
@@ -74,12 +84,6 @@ struct _GDHCPClientClass
   gpointer _reserved7;
   gpointer _reserved8;
 };
-
-typedef enum {
-	G_DHCP_IPV4,
-	G_DHCP_IPV6,
-	G_DHCP_IPV4LL,
-} GDHCPType;
 
 #define G_DHCP_SUBNET		0x01
 #define G_DHCP_ROUTER		0x03
@@ -233,55 +237,40 @@ void gdhcp_v6_client_clear_retransmit(GDHCPClient *dhcp_client);
 
 /* DHCP server part */
 
-typedef enum {
-	G_DHCP_SERVER_ERROR_NONE,
-	G_DHCP_SERVER_ERROR_INTERFACE_UNAVAILABLE,
-	G_DHCP_SERVER_ERROR_INTERFACE_IN_USE,
-	G_DHCP_SERVER_ERROR_INTERFACE_DOWN,
-	G_DHCP_SERVER_ERROR_NOMEM,
-	G_DHCP_SERVER_ERROR_INVALID_INDEX,
-	G_DHCP_SERVER_ERROR_INVALID_OPTION,
-	G_DHCP_SERVER_ERROR_IP_ADDRESS_INVALID
-} GDHCPServerError;
+#define GDHCP_TYPE_SERVER  (gdhcp_server_get_type())
+#define GDHCP_SERVER_ERROR (gdhcp_server_error_quark())
+
+G_DECLARE_DERIVABLE_TYPE (GDHCPServer, gdhcp_server, GDHCP, SERVER, GObject)
+
+struct _GDHCPServerClass
+{
+  GObjectClass parent_class;
+  void (*lease_added)  (GDHCPClient *self, gpointer lease_added_data);
+};
 
 typedef void (*GDHCPSaveLeaseFunc) (unsigned char *mac,
 			unsigned int nip, unsigned int expire);
 
-typedef void (*GDHCPLeaseAddedCb) (unsigned char *mac, uint32_t ip);
-
-struct _GDHCPServer;
-
-typedef struct _GDHCPServer GDHCPServer;
+GDHCP_EXTERN
+GDHCPServer *gdhcp_server_new(GDHCPType type, int ifindex, GError **error);
 
 GDHCP_EXTERN
-GDHCPServer *g_dhcp_server_new(GDHCPType type, int ifindex, GDHCPServerError *error);
+int gdhcp_server_start(GDHCPServer *server);
 
 GDHCP_EXTERN
-int g_dhcp_server_start(GDHCPServer *server);
+void gdhcp_server_stop(GDHCPServer *server);
 
 GDHCP_EXTERN
-void g_dhcp_server_stop(GDHCPServer *server);
+int gdhcp_server_set_option(GDHCPServer *server, unsigned char option_code, const char *option_value);
 
 GDHCP_EXTERN
-GDHCPServer *g_dhcp_server_ref(GDHCPServer *server);
+int gdhcp_server_set_ip_range(GDHCPServer *server, const char *start_ip, const char *end_ip);
 
 GDHCP_EXTERN
-void g_dhcp_server_unref(GDHCPServer *server);
+void gdhcp_server_set_lease_time(GDHCPServer *dhcp_server, unsigned int lease_time);
 
 GDHCP_EXTERN
-int g_dhcp_server_set_option(GDHCPServer *server, unsigned char option_code, const char *option_value);
-
-GDHCP_EXTERN
-int g_dhcp_server_set_ip_range(GDHCPServer *server, const char *start_ip, const char *end_ip);
-
-GDHCP_EXTERN
-void g_dhcp_server_set_lease_time(GDHCPServer *dhcp_server, unsigned int lease_time);
-
-GDHCP_EXTERN
-void g_dhcp_server_set_save_lease(GDHCPServer *dhcp_server, GDHCPSaveLeaseFunc func, gpointer user_data);
-
-GDHCP_EXTERN
-void g_dhcp_server_set_lease_added(GDHCPServer *dhcp_server, GDHCPLeaseAddedCb cb);
+void gdhcp_server_set_save_lease(GDHCPServer *dhcp_server, GDHCPSaveLeaseFunc func, gpointer user_data);
 
 int dhcp_get_random(uint64_t *val);
 void dhcp_cleanup_random(void);
