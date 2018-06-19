@@ -24,17 +24,12 @@ gdhcp_version_h = configure_file(
 #
 # Generate library file
 #
-gdhcp_generated_headers = [
-  gdhcp_version_h,
-]
-
 gdhcp_public_headers = [
+  gdhcp_version_h,
   'gdhcp.h',
 ]
 
 gdhcp_headers = [
-  gdhcp_generated_headers,
-  gdhcp_public_headers,
   'gdhcp-common.h',
   'gdhcp-ipv4ll.h',
   'gdhcp-unaligned.h',
@@ -48,9 +43,17 @@ gdhcp_sources = [
   'gdhcp-server.c',
 ]
 
+gdhcp_marshaller = gnome.genmarshal('gdhcp-marshal',
+                      sources: 'gdhcp-marshal.list',
+                       prefix: 'gdhcp_marshal',
+                     internal: true
+)
+
 gdhcp_files = [
+  gdhcp_public_headers,
   gdhcp_headers,
   gdhcp_sources,
+  gdhcp_marshaller,
 ]
 
 gdhcp_deps = [
@@ -99,7 +102,7 @@ endif
 #
 # Install header files
 #
-install_headers(gdhcp_headers, subdir: gdhcp_header_subdir)
+install_headers(gdhcp_public_headers, subdir: gdhcp_header_subdir)
 
 
 #

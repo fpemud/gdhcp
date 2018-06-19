@@ -115,12 +115,12 @@ int main(int argc, char *argv[])
 	gdhcp_client_set_request(dhcp_client, G_DHCP_ROUTER);
 
 	g_signal_connect(dhcp_client,
-					 "lease_available",
+					 "lease-available",
 					 G_CALLBACK (lease_available_cb),
 					 NULL);
 
 	g_signal_connect(dhcp_client,
-					 "no_lease",
+					 "no-lease",
 					 G_CALLBACK (no_lease_cb),
 					 NULL);
 

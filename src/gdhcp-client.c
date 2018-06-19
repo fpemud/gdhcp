@@ -167,9 +167,9 @@ static void gdhcp_client_class_init(GDHCPClientClass *klass)
 	/**
 	 * GDHCPClient::lease_available:
 	 *
-	 * The "lease_available" signal is called when FIXME.
+	 * The "lease-available" signal is called when FIXME.
 	 */
-	signals[SIG_LEASE_AVAILABLE] = g_signal_new("lease_available",
+	signals[SIG_LEASE_AVAILABLE] = g_signal_new("lease-available",
 												G_TYPE_FROM_CLASS(klass),
 												G_SIGNAL_RUN_LAST,
 												G_STRUCT_OFFSET(GDHCPClientClass, lease_available),
@@ -183,9 +183,9 @@ static void gdhcp_client_class_init(GDHCPClientClass *klass)
 	/**
 	 * GDHCPClient::ipv4ll_available:
 	 *
-	 * The "ipv4ll_available" signal is called when FIXME.
+	 * The "ipv4ll-available" signal is called when FIXME.
 	 */
-	signals[SIG_IPV4LL_AVAILABLE] = g_signal_new("ipv4ll_available",
+	signals[SIG_IPV4LL_AVAILABLE] = g_signal_new("ipv4ll-available",
 												 G_TYPE_FROM_CLASS(klass),
 												 G_SIGNAL_RUN_LAST,
 												 G_STRUCT_OFFSET(GDHCPClientClass, ipv4ll_available),
@@ -199,9 +199,9 @@ static void gdhcp_client_class_init(GDHCPClientClass *klass)
 	/**
 	 * GDHCPClient::no_lease:
 	 *
-	 * The "no_lease" signal is called when FIXME.
+	 * The "no-lease" signal is called when FIXME.
 	 */
-	signals[SIG_NO_LEASE] = g_signal_new("no_lease",
+	signals[SIG_NO_LEASE] = g_signal_new("no-lease",
 										 G_TYPE_FROM_CLASS(klass),
 										 G_SIGNAL_RUN_LAST,
 										 G_STRUCT_OFFSET(GDHCPClientClass, no_lease),
@@ -215,9 +215,9 @@ static void gdhcp_client_class_init(GDHCPClientClass *klass)
 	/**
 	 * GDHCPClient::lease_lost:
 	 *
-	 * The "lease_lost" signal is called when FIXME.
+	 * The "lease-lost" signal is called when FIXME.
 	 */
-	signals[SIG_LEASE_LOST] = g_signal_new("lease_lost",
+	signals[SIG_LEASE_LOST] = g_signal_new("lease-lost",
 										   G_TYPE_FROM_CLASS(klass),
 										   G_SIGNAL_RUN_LAST,
 										   G_STRUCT_OFFSET(GDHCPClientClass, lease_lost),
@@ -231,9 +231,9 @@ static void gdhcp_client_class_init(GDHCPClientClass *klass)
 	/**
 	 * GDHCPClient::ipv4ll_lost:
 	 *
-	 * The "ipv4ll_lost" signal is called when FIXME.
+	 * The "ipv4ll-lost" signal is called when FIXME.
 	 */
-	signals[SIG_IPV4LL_LOST] = g_signal_new("ipv4ll_lost",
+	signals[SIG_IPV4LL_LOST] = g_signal_new("ipv4ll-lost",
 											G_TYPE_FROM_CLASS(klass),
 											G_SIGNAL_RUN_LAST,
 											G_STRUCT_OFFSET(GDHCPClientClass, ipv4ll_lost),
@@ -247,9 +247,9 @@ static void gdhcp_client_class_init(GDHCPClientClass *klass)
 	/**
 	 * GDHCPClient::address_conflict:
 	 *
-	 * The "address_conflict" signal is called when FIXME.
+	 * The "address-conflict" signal is called when FIXME.
 	 */
-	signals[SIG_ADDRESS_CONFLICT] = g_signal_new("address_conflict",
+	signals[SIG_ADDRESS_CONFLICT] = g_signal_new("address-conflict",
 												 G_TYPE_FROM_CLASS(klass),
 												 G_SIGNAL_RUN_LAST,
 												 G_STRUCT_OFFSET(GDHCPClientClass, address_conflict),
@@ -263,9 +263,9 @@ static void gdhcp_client_class_init(GDHCPClientClass *klass)
 	/**
 	 * GDHCPClient::information_req:
 	 *
-	 * The "information_req" signal is called when FIXME.
+	 * The "information-req" signal is called when FIXME.
 	 */
-	signals[SIG_INFORMATION_REQ] = g_signal_new("information_req",
+	signals[SIG_INFORMATION_REQ] = g_signal_new("information-req",
 												G_TYPE_FROM_CLASS(klass),
 												G_SIGNAL_RUN_LAST,
 												G_STRUCT_OFFSET(GDHCPClientClass, information_req),
