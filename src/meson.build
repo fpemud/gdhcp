@@ -109,7 +109,7 @@ install_headers(gdhcp_public_headers, subdir: gdhcp_header_subdir)
 # Generate dependency item and pkgconfig files
 #
 gdhcp_dep = declare_dependency(
-              sources: gdhcp_generated_headers,
+              sources: gdhcp_public_headers,
          dependencies: gdhcp_deps,
             link_with: gdhcp,
   include_directories: include_directories('.'),
