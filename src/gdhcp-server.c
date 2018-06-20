@@ -41,6 +41,7 @@
 #include "gdhcp.h"
 #include "gdhcp-common.h"
 #include "gdhcp-unaligned.h"
+#include "gdhcp-marshal.h"
 
 /* 8 hours */
 #define DEFAULT_DHCP_LEASE_SEC (8*60*60)
@@ -519,9 +520,9 @@ static void add_option(gpointer key, gpointer value, gpointer user_data)
 		return;
 
 	switch (option_code) {
-	case G_DHCP_SUBNET:
-	case G_DHCP_ROUTER:
-	case G_DHCP_DNS_SERVER:
+	case GDHCP_SUBNET:
+	case GDHCP_ROUTER:
+	case GDHCP_DNS_SERVER:
 		if (inet_aton(option_value, &nip) == 0)
 			return;
 
@@ -667,7 +668,7 @@ static void send_ACK(GDHCPServer *dhcp_server,
 
 	add_lease(dhcp_server, 0, packet.chaddr, packet.yiaddr);
 
-	g_signal_emit(dhcp_server, signals[SIG_LEASE_ADDED], packet.chaddr, packet.yiaddr);
+	g_signal_emit(dhcp_server, signals[SIG_LEASE_ADDED], 0, packet.chaddr, packet.yiaddr);
 }
 
 static void send_NAK(GDHCPServer *dhcp_server,
@@ -849,9 +850,9 @@ int gdhcp_server_set_option(GDHCPServer *dhcp_server, unsigned char option_code,
 	debug(dhcp_server, "option_code %d option_value %s", option_code, option_value);
 
 	switch (option_code) {
-		case G_DHCP_SUBNET:
-		case G_DHCP_ROUTER:
-		case G_DHCP_DNS_SERVER:
+		case GDHCP_SUBNET:
+		case GDHCP_ROUTER:
+		case GDHCP_DNS_SERVER:
 			if (inet_aton(option_value, &nip) == 0)
 				return -ENXIO;
 			break;

@@ -62,23 +62,23 @@ static void lease_available_cb(GDHCPClient *dhcp_client, gpointer user_data)
 	if (!address)
 		return;
 
-	option_value = gdhcp_client_get_option(dhcp_client, G_DHCP_SUBNET);
+	option_value = gdhcp_client_get_option(dhcp_client, GDHCP_SUBNET);
 	for (list = option_value; list; list = list->next)
 		printf("sub-mask %s\n", (char *) list->data);
 
-	option_value = gdhcp_client_get_option(dhcp_client, G_DHCP_DNS_SERVER);
+	option_value = gdhcp_client_get_option(dhcp_client, GDHCP_DNS_SERVER);
 	for (list = option_value; list; list = list->next)
 		printf("domain-name-servers %s\n", (char *) list->data);
 
-	option_value = gdhcp_client_get_option(dhcp_client, G_DHCP_DOMAIN_NAME);
+	option_value = gdhcp_client_get_option(dhcp_client, GDHCP_DOMAIN_NAME);
 	for (list = option_value; list; list = list->next)
 		printf("domain-name %s\n", (char *) list->data);
 
-	option_value = gdhcp_client_get_option(dhcp_client, G_DHCP_ROUTER);
+	option_value = gdhcp_client_get_option(dhcp_client, GDHCP_ROUTER);
 	for (list = option_value; list; list = list->next)
 		printf("routers %s\n", (char *) list->data);
 
-	option_value = gdhcp_client_get_option(dhcp_client, G_DHCP_HOST_NAME);
+	option_value = gdhcp_client_get_option(dhcp_client, GDHCP_HOST_NAME);
 	for (list = option_value; list; list = list->next)
 		printf("hostname %s\n", (char *) list->data);
 }
@@ -105,14 +105,14 @@ int main(int argc, char *argv[])
 		exit(0);
 	}
 
-	gdhcp_client_set_send(dhcp_client, G_DHCP_HOST_NAME, "<hostname>");
+	gdhcp_client_set_send(dhcp_client, GDHCP_HOST_NAME, "<hostname>");
 
-	gdhcp_client_set_request(dhcp_client, G_DHCP_HOST_NAME);
-	gdhcp_client_set_request(dhcp_client, G_DHCP_SUBNET);
-	gdhcp_client_set_request(dhcp_client, G_DHCP_DNS_SERVER);
-	gdhcp_client_set_request(dhcp_client, G_DHCP_DOMAIN_NAME);
-	gdhcp_client_set_request(dhcp_client, G_DHCP_NTP_SERVER);
-	gdhcp_client_set_request(dhcp_client, G_DHCP_ROUTER);
+	gdhcp_client_set_request(dhcp_client, GDHCP_HOST_NAME);
+	gdhcp_client_set_request(dhcp_client, GDHCP_SUBNET);
+	gdhcp_client_set_request(dhcp_client, GDHCP_DNS_SERVER);
+	gdhcp_client_set_request(dhcp_client, GDHCP_DOMAIN_NAME);
+	gdhcp_client_set_request(dhcp_client, GDHCP_NTP_SERVER);
+	gdhcp_client_set_request(dhcp_client, GDHCP_ROUTER);
 
 	g_signal_connect(dhcp_client,
 					 "lease-available",

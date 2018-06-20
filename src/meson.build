@@ -75,7 +75,7 @@ gdhcp = library('gdhcp-' + apiversion, gdhcp_files,
 if get_option('with_introspection')
 
   gir = gnome.generate_gir(gdhcp,
-                sources: gdhcp_public_headers,
+                sources: gdhcp_files,
               nsversion: apiversion,
               namespace: 'gdhcp',
           symbol_prefix: 'gdhcp_',

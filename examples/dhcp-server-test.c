@@ -43,9 +43,9 @@ int main(int argc, char *argv[])
 	}
 
 	gdhcp_server_set_lease_time(dhcp_server, 3600);
-	gdhcp_server_set_option(dhcp_server, G_DHCP_SUBNET, "255.255.0.0");
-	gdhcp_server_set_option(dhcp_server, G_DHCP_ROUTER, "192.168.0.2");
-	gdhcp_server_set_option(dhcp_server, G_DHCP_DNS_SERVER, "192.168.0.3");
+	gdhcp_server_set_option(dhcp_server, GDHCP_SUBNET, "255.255.0.0");
+	gdhcp_server_set_option(dhcp_server, GDHCP_ROUTER, "192.168.0.2");
+	gdhcp_server_set_option(dhcp_server, GDHCP_DNS_SERVER, "192.168.0.3");
 	gdhcp_server_set_ip_range(dhcp_server, "192.168.0.101",
 							"192.168.0.102");
 	main_loop = g_main_loop_new(NULL, FALSE);
