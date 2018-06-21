@@ -976,6 +976,15 @@ int gdhcp_v6_client_set_duid(GDHCPClient *dhcp_client, unsigned char *duid, int 
 	return 0;
 }
 
+/**
+ * gdhcp_v6_client_set_pd:
+ * @dhcp_client:
+ * @T1:
+ * @T2:
+ * prefixes:
+ *
+ * Returns:
+ */
 int gdhcp_v6_client_set_pd(GDHCPClient *dhcp_client, uint32_t *T1, uint32_t *T2, GSList *prefixes)
 {
 	GDHCPClientPrivate *priv = gdhcp_client_get_instance_private(dhcp_client);

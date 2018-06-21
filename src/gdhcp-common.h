@@ -224,6 +224,9 @@ int dhcp_l3_socket_send(int index, int port, int family);
 char *get_interface_name(int index);
 bool interface_is_up(int index);
 
+int dhcp_get_random(uint64_t *val);
+void dhcp_cleanup_random(void);
+
 #ifdef __cplusplus
 }
 #endif

@@ -54,6 +54,7 @@ typedef enum {
 #define GDHCP_TYPE_CLIENT  (gdhcp_client_get_type())
 #define GDHCP_CLIENT_ERROR (gdhcp_client_error_quark())
 
+GDHCP_EXTERN
 G_DECLARE_DERIVABLE_TYPE (GDHCPClient, gdhcp_client, GDHCP, CLIENT, GObject)
 
 struct _GDHCPClientClass
@@ -75,14 +76,6 @@ struct _GDHCPClientClass
   void (*release)          (GDHCPClient *self, gpointer release_data);
   void (*confirm)          (GDHCPClient *self, gpointer confirm_data);
   void (*decline)          (GDHCPClient *self, gpointer decline_data);
-
-  gpointer _reserved2;
-  gpointer _reserved3;
-  gpointer _reserved4;
-  gpointer _reserved5;
-  gpointer _reserved6;
-  gpointer _reserved7;
-  gpointer _reserved8;
 };
 
 #define GDHCP_SUBNET		0x01
@@ -232,6 +225,7 @@ void gdhcp_v6_client_clear_retransmit(GDHCPClient *dhcp_client);
 #define GDHCP_TYPE_SERVER  (gdhcp_server_get_type())
 #define GDHCP_SERVER_ERROR (gdhcp_server_error_quark())
 
+GDHCP_EXTERN
 G_DECLARE_DERIVABLE_TYPE (GDHCPServer, gdhcp_server, GDHCP, SERVER, GObject)
 
 struct _GDHCPServerClass
@@ -263,9 +257,6 @@ void gdhcp_server_set_lease_time(GDHCPServer *dhcp_server, unsigned int lease_ti
 
 GDHCP_EXTERN
 void gdhcp_server_set_save_lease(GDHCPServer *dhcp_server, GDHCPSaveLeaseFunc func, gpointer user_data);
-
-int dhcp_get_random(uint64_t *val);
-void dhcp_cleanup_random(void);
 
 G_END_DECLS
 

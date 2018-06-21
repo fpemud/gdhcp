@@ -75,7 +75,7 @@ gdhcp = library('gdhcp-' + apiversion, gdhcp_files,
 if get_option('with_introspection')
 
   gir = gnome.generate_gir(gdhcp,
-                sources: gdhcp_files,
+                sources: gdhcp_public_headers,
               nsversion: apiversion,
               namespace: 'gdhcp',
           symbol_prefix: 'gdhcp_',
@@ -85,7 +85,7 @@ if get_option('with_introspection')
                 install: true,
         install_dir_gir: girdir,
     install_dir_typelib: typelibdir,
-             extra_args: [ '--c-include=gdhcp.h' ],
+#             extra_args: [ '--c-include=gdhcp.h' ],
   )
 
   if get_option('with_vapi')
