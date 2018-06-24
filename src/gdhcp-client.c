@@ -177,9 +177,6 @@ static void gdhcp_client_class_init(GDHCPClientClass *klass)
 												NULL, NULL,
 												g_cclosure_marshal_VOID__VOID,
 												G_TYPE_NONE, 0);
-	g_signal_set_va_marshaller(signals[SIG_LEASE_AVAILABLE],
-							   G_TYPE_FROM_CLASS(klass),
-							   g_cclosure_marshal_VOID__VOIDv);
 
 	/**
 	 * GDHCPClient::ipv4ll_available:
@@ -193,9 +190,6 @@ static void gdhcp_client_class_init(GDHCPClientClass *klass)
 												 NULL, NULL,
 												 g_cclosure_marshal_VOID__VOID,
 												 G_TYPE_NONE, 0);
-	g_signal_set_va_marshaller(signals[SIG_IPV4LL_AVAILABLE],
-							   G_TYPE_FROM_CLASS(klass),
-							   g_cclosure_marshal_VOID__VOIDv);
 
 	/**
 	 * GDHCPClient::no_lease:

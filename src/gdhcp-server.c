@@ -103,9 +103,6 @@ static void gdhcp_server_class_init(GDHCPServerClass *klass)
 											NULL, NULL,
 											g_cclosure_marshal_VOID__VOID,
 											G_TYPE_NONE, 0);
-	g_signal_set_va_marshaller(signals[SIG_LEASE_ADDED],
-							   G_TYPE_FROM_CLASS(klass),
-							   g_cclosure_marshal_VOID__VOIDv);
 }
 
 static void gdhcp_server_init(GDHCPServer *dhcp_server)
