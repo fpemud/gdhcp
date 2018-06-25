@@ -1,5 +1,5 @@
 /* build with:
- *   gcc `pkg-config --cflags --libs gdhcp-1.0` dhcp-test.c -o dhcp-test
+ *   gcc `pkg-config --cflags --libs gdhcp-1.0 gobject-2.0` dhcp-test.c -o dhcp-test
  */
 
 #include <stdio.h>
@@ -105,7 +105,7 @@ int main(int argc, char *argv[])
 		exit(0);
 	}
 
-	gdhcp_client_set_send(dhcp_client, GDHCP_HOST_NAME, "<hostname>");
+	gdhcp_client_set_send(dhcp_client, GDHCP_HOST_NAME, "<hostname>", NULL);
 
 	gdhcp_client_set_request(dhcp_client, GDHCP_HOST_NAME);
 	gdhcp_client_set_request(dhcp_client, GDHCP_SUBNET);
@@ -141,7 +141,7 @@ int main(int argc, char *argv[])
 
 	g_timer_destroy(timer);
 
-	g_dhcp_client_unref(dhcp_client);
+	g_object_unref(dhcp_client);
 
 	g_main_loop_unref(main_loop);
 

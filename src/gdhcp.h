@@ -200,14 +200,10 @@ GDHCP_EXTERN
 void gdhcp_v6_client_set_iaid(GDHCPClient *dhcp_client, uint32_t iaid);
 
 GDHCP_EXTERN
-int gdhcp_v6_client_set_ia(GDHCPClient *dhcp_client, int index,
-			int code, uint32_t *T1, uint32_t *T2,
-			bool add_addresses, const char *address);
+int gdhcp_v6_client_set_ia(GDHCPClient *dhcp_client, int index, int code, uint32_t *T1, uint32_t *T2, bool add_addresses, const char *address);
 
 GDHCP_EXTERN
-int gdhcp_v6_client_set_ias(GDHCPClient *dhcp_client, int index,
-			int code, uint32_t *T1, uint32_t *T2,
-			GSList *addresses);
+int gdhcp_v6_client_set_ias(GDHCPClient *dhcp_client, int index, int code, uint32_t *T1, uint32_t *T2, GSList *addresses);
 
 GDHCP_EXTERN
 void gdhcp_v6_client_reset_request(GDHCPClient *dhcp_client);

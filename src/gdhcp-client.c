@@ -203,9 +203,6 @@ static void gdhcp_client_class_init(GDHCPClientClass *klass)
 										 NULL, NULL,
 										 g_cclosure_marshal_VOID__VOID,
 										 G_TYPE_NONE, 0);
-	g_signal_set_va_marshaller(signals[SIG_NO_LEASE],
-							   G_TYPE_FROM_CLASS(klass),
-							   g_cclosure_marshal_VOID__VOIDv);
 
 	/**
 	 * GDHCPClient::lease_lost:
@@ -219,9 +216,6 @@ static void gdhcp_client_class_init(GDHCPClientClass *klass)
 										   NULL, NULL,
 										   g_cclosure_marshal_VOID__VOID,
 										   G_TYPE_NONE, 0);
-	g_signal_set_va_marshaller(signals[SIG_LEASE_LOST],
-							   G_TYPE_FROM_CLASS(klass),
-							   g_cclosure_marshal_VOID__VOIDv);
 
 	/**
 	 * GDHCPClient::ipv4ll_lost:
@@ -235,9 +229,6 @@ static void gdhcp_client_class_init(GDHCPClientClass *klass)
 											NULL, NULL,
 											g_cclosure_marshal_VOID__VOID,
 											G_TYPE_NONE, 0);
-	g_signal_set_va_marshaller(signals[SIG_IPV4LL_LOST],
-							   G_TYPE_FROM_CLASS(klass),
-							   g_cclosure_marshal_VOID__VOIDv);
 
 	/**
 	 * GDHCPClient::address_conflict:
@@ -251,9 +242,6 @@ static void gdhcp_client_class_init(GDHCPClientClass *klass)
 												 NULL, NULL,
 												 g_cclosure_marshal_VOID__VOID,
 												 G_TYPE_NONE, 0);
-	g_signal_set_va_marshaller(signals[SIG_ADDRESS_CONFLICT],
-							   G_TYPE_FROM_CLASS(klass),
-							   g_cclosure_marshal_VOID__VOIDv);
 
 	/**
 	 * GDHCPClient::information_req:
@@ -267,9 +255,6 @@ static void gdhcp_client_class_init(GDHCPClientClass *klass)
 												NULL, NULL,
 												g_cclosure_marshal_VOID__VOID,
 												G_TYPE_NONE, 0);
-	g_signal_set_va_marshaller(signals[SIG_INFORMATION_REQ],
-							   G_TYPE_FROM_CLASS(klass),
-							   g_cclosure_marshal_VOID__VOIDv);
 
 	/**
 	 * GDHCPClient::solicitation:
@@ -283,9 +268,6 @@ static void gdhcp_client_class_init(GDHCPClientClass *klass)
 											 NULL, NULL,
 											 g_cclosure_marshal_VOID__VOID,
 											 G_TYPE_NONE, 0);
-	g_signal_set_va_marshaller(signals[SIG_SOLICITATION],
-							   G_TYPE_FROM_CLASS(klass),
-							   g_cclosure_marshal_VOID__VOIDv);
 
 	/**
 	 * GDHCPClient::advertise:
@@ -299,9 +281,6 @@ static void gdhcp_client_class_init(GDHCPClientClass *klass)
 										  NULL, NULL,
 										  g_cclosure_marshal_VOID__VOID,
 										  G_TYPE_NONE, 0);
-	g_signal_set_va_marshaller(signals[SIG_ADVERTISE],
-							   G_TYPE_FROM_CLASS(klass),
-							   g_cclosure_marshal_VOID__VOIDv);
 
 	/**
 	 * GDHCPClient::request:
@@ -315,9 +294,6 @@ static void gdhcp_client_class_init(GDHCPClientClass *klass)
 										NULL, NULL,
 										g_cclosure_marshal_VOID__VOID,
 										G_TYPE_NONE, 0);
-	g_signal_set_va_marshaller(signals[SIG_REQUEST],
-							   G_TYPE_FROM_CLASS(klass),
-							   g_cclosure_marshal_VOID__VOIDv);
 
 	/**
 	 * GDHCPClient::renew:
@@ -331,9 +307,6 @@ static void gdhcp_client_class_init(GDHCPClientClass *klass)
 									  NULL, NULL,
 									  g_cclosure_marshal_VOID__VOID,
 									  G_TYPE_NONE, 0);
-	g_signal_set_va_marshaller(signals[SIG_RENEW],
-							   G_TYPE_FROM_CLASS(klass),
-							   g_cclosure_marshal_VOID__VOIDv);
 
 	/**
 	 * GDHCPClient::rebind:
@@ -347,9 +320,6 @@ static void gdhcp_client_class_init(GDHCPClientClass *klass)
 									   NULL, NULL,
 									   g_cclosure_marshal_VOID__VOID,
 									   G_TYPE_NONE, 0);
-	g_signal_set_va_marshaller(signals[SIG_REBIND],
-							   G_TYPE_FROM_CLASS(klass),
-							   g_cclosure_marshal_VOID__VOIDv);
 
 	/**
 	 * GDHCPClient::release:
@@ -363,9 +333,6 @@ static void gdhcp_client_class_init(GDHCPClientClass *klass)
 										NULL, NULL,
 										g_cclosure_marshal_VOID__VOID,
 										G_TYPE_NONE, 0);
-	g_signal_set_va_marshaller(signals[SIG_RELEASE],
-							   G_TYPE_FROM_CLASS(klass),
-							   g_cclosure_marshal_VOID__VOIDv);
 
 	/**
 	 * GDHCPClient::confirm:
@@ -379,9 +346,6 @@ static void gdhcp_client_class_init(GDHCPClientClass *klass)
 										NULL, NULL,
 										g_cclosure_marshal_VOID__VOID,
 										G_TYPE_NONE, 0);
-	g_signal_set_va_marshaller(signals[SIG_CONFIRM],
-							   G_TYPE_FROM_CLASS(klass),
-							   g_cclosure_marshal_VOID__VOIDv);
 
 	/**
 	 * GDHCPClient::decline:
@@ -395,9 +359,6 @@ static void gdhcp_client_class_init(GDHCPClientClass *klass)
 										NULL, NULL,
 										g_cclosure_marshal_VOID__VOID,
 										G_TYPE_NONE, 0);
-	g_signal_set_va_marshaller(signals[SIG_DECLINE],
-							   G_TYPE_FROM_CLASS(klass),
-							   g_cclosure_marshal_VOID__VOIDv);
 }
 
 static void gdhcp_client_init (GDHCPClient *dhcp_client)
